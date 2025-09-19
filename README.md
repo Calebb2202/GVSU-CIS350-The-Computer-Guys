@@ -5,7 +5,7 @@ Description: Python programming langauge learning application. The lessons are g
 # Team Members and Roles
 
 * [Caleb Boerma](https://github.com/Calebb2202/CIS350-HW2-BOERMA) (Role 1, Role 2)
-* Member 2 (Role 3, Role 4)
+* [Aiden Woodland](https://github.com/awoodland02799-rgb/CIS350-HW2-Woodland) (Role 3, Role 4)
 * Member 3 (Role 5, Role 6)
 * Member 4 (Role 7, Role 8)
 
