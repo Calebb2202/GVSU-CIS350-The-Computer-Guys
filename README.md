@@ -7,7 +7,7 @@ Description: Python programming langauge learning application. The lessons are g
 * [Caleb Boerma](https://github.com/Calebb2202/CIS350-HW2-BOERMA) (Role 1, Role 2)
 * [Aiden Woodland](https://github.com/awoodland02799-rgb/CIS350-HW2-Woodland) (Role 3, Role 4)
 * [Poom Wongvilart](https://github.com/Derpyderp157/CIS350-HW2-Wongvilart.git) (Role 5, Role 6)
-* [Dmitry Samoylov](https://github.com/brycesamoylov/CIS350-HW2-Samoylov) (Role 7, Role 8)
+* [Dmitry Samoylov](https://github.com/brycesamoylov/CIS350-HWgit2-Samoylov) (Role 7, Role 8)
 
 # Prerequisites
 
