@@ -7,7 +7,7 @@
 
 Our Project is named "Syntax Sensei", it is a Python Programming language learning website. Users will follow lessons to learn Python starting basic and getting increasingly difficult. The lessons are created by ChatGPT but are verified to be accurate and helpful by us. The project will focus on gamefying the learning similar to Duolingo but for coding.
 
-**Features:**
+### **Features:**
 #### Functional
 * The system shall allow users to create acccounts and login
 * The system shall store user information such as progress and missed questions
