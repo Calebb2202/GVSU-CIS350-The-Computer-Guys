@@ -31,3 +31,14 @@ flowchart TD
     R --> S["Notifications Service"]
     S -- Push/Email/Discord --> H
 ```
+# Flowchart For Lesson Logic
+```mermaid
+flowchart LR
+    A[Start Lesson] --> B[Get Question]
+    B --> C[Answer Question]
+    C --> D[Check Answer]
+    D -->|Correct| E[Give XP + Next Question]
+    D -->|Wrong| F[Show Hint + Try Again]
+    E --> B
+    F --> B
+```
