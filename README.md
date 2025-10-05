@@ -5,9 +5,9 @@ Description: Python programming langauge learning application which we named Syn
 # Team Members and Roles
 
 * [Caleb Boerma](https://github.com/Calebb2202/CIS350-HW2-BOERMA) (Task/General Manager, Backend Developer, Meeting Note Taker)
-* [Aiden Woodland](https://github.com/awoodland02799-rgb/CIS350-HW2-Woodland) (Role 3, Role 4)
-* [Poom Wongvilart](https://github.com/Derpyderp157/CIS350-HW2-Wongvilart.git) (Role 5, Role 6)
-* [Dmitry Samoylov](https://github.com/brycesamoylov/CIS350-HW2-Samoylov) (Role 7, Role 8)
+* [Aiden Woodland](https://github.com/awoodland02799-rgb/CIS350-HW2-Woodland) (Backend Developer)
+* [Poom Wongvilart](https://github.com/Derpyderp157/CIS350-HW2-Wongvilart.git) (Main Designer, Frontend Developer, Meeting Coordinator)
+* [Dmitry Samoylov](https://github.com/brycesamoylov/CIS350-HW2-Samoylov) (Assistant Designer, Frontend Developer, Diagram Documentator)
 
 # Prerequisites
 
