@@ -4,11 +4,11 @@ This document will outline how we went about developing the python lessons. Over
 ### title (str):
 This attribute holds the title of the lesson.
 ### description (str):
-This attribute is a long string that holds the instructions for the user on what to do to complete the lesson
+This attribute is a long string that holds the instructions for the user on what to do to complete the lesson.
 ### goal (str):
-This attribute gives a clear goal to the user for them to accomplish
+This attribute gives a clear goal to the user for them to accomplish.
 ### **solution (str):**
-This attribute is not shown to the user. This attribute holds the output of the correct code, so if the user's output matches this string the user has completed the lesson
+This attribute is not shown to the user. This attribute holds the output of the correct code, so if the user's output matches this string the user has completed the lesson.
 ### **preloaded_code (str):**
 This attribute can be empty or have python code inside of it. When it is not empty it will display in the code editor. It will be ultilized when lessons want users to either change existing code or complete the rest of the code. 
 ### **hints (list of str):**
@@ -21,7 +21,7 @@ This attribute is a list of objects to the class "lesson". These lesson objects 
 ### **getter methods ():**
 These methods will just return the value corresponding to the attribute for example "get_title()" returns the title attribute. There is get methods for all attributes.
 ### **get_hint (index:int):**
-This method will be called when the user requests a hint. The input index corresponds to which hint to return from the hints attribute. 1 is the first hint in the list, 2 is the second hint, and 3 is the third and final hint
+This method will be called when the user requests a hint. The input index corresponds to which hint to return from the hints attribute. 1 is the first hint in the list, 2 is the second hint, and 3 is the third and final hint.
 ### **get_review_questions ():**
 This method uses the recomended_reviews list to go through the list of lesson objects grabbing the review objects in the review_questions list of each lesson.
 ### **check_code (user_code:str):**
