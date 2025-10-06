@@ -19,13 +19,13 @@ Our Project is named "Syntax Sensei", it is a Python Programming language learni
  
 # Anticipated Technologies
 
-**Developement Tools:** VScode, Git, Github, Figma Design
+| Category            | Tools & Technologies                                    |
+|---------------------|--------------------------------------------------------|
+| **Development Tools** | VS Code, Git, GitHub, Figma                          |
+| **Languages**         | Python, HTML, JavaScript                             |
+| **Frontend**          | Next.js, React, TypeScript, Tailwind CSS             |
+| **Backend**           | Django, SQLite, Django REST Framework                |
 
-**Languages:** Python, HTML, Javascript
-
-**Frontend:** 
-
-**Backend:** Django, SQLite, Django REST Framework
 
 # Method/Approach
 
