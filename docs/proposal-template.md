@@ -96,6 +96,58 @@ In this phase we should have finished developement by now so we have now moved o
 ### Phase 7: Finalizing the Project for Release (Nov30-DueDate)
 In this final phase we will finalize the product preparing it for release and submission.
 
+# Estimated Timeline (Revised Oct 19)
+
+### Phase 1: Planning & Requirements (Oct 1 - Oct 19)
+* **Goal:** Finalize the SRS, tech stack, and UML diagrams. All high-level planning is complete.
+
+### Phase 2: Project Setup & Core Services (Oct 20 - Oct 29)
+* **Goal:** Get the project's "skeleton" running for both frontend and backend.
+* **Frontend:**
+    * Set up the React + Vite project in the GitHub repo.
+    * Build the main static components (Navbar, Footer, Homepage).
+    * Set up page routing (e.g., for `/login`, `/dashboard`, `/lesson`).
+* **Backend:**
+    * Set up the Node.js + Express server.
+    * Set up the Firebase project (Auth and Firestore).
+    * Implement Google SSO (login/logout) and create the "users" collection in Firestore.
+
+### Phase 3: Parallel Feature Development (Oct 30 - Nov 21)
+* **Goal:** This is the main build phase where all features are built and connected simultaneously.
+* **Frontend (Task 1):**
+    * Build the UI for the Dashboard, Lesson Page, and Proficiency Quiz.
+    * Use plain CSS to style all pages to match your vision.
+* **Backend (Task 2):**
+    * Build all REST API endpoints for lessons (e.g., `GET /api/lessons`, `POST /api/submit-answer`).
+    * Implement the progression logic (saving progress, updating belt rank).
+* **Content (Task 3):**
+    * (Can be done by anyone) Write all lesson text, questions, and answers and load them into the Firebase database.
+* **Integration (Task 4):**
+    * Frontend and Backend teams work together to connect the React UI to the API. This is not a separate phase; it should happen *continuously* during this period.
+
+### Phase 4: High-Risk Feature (Nov 16 - Nov 30)
+* **Goal:** Build the single most complex feature: the Final Coding Challenge.
+* **Description:** This phase overlaps with Phase 3. One or two developers should focus *only* on this task.
+* **Tasks:**
+    * Build the IDE-like UI in React.
+    * Create the "sandboxed" backend service that safely runs Python code.
+    * Implement the logic for checking the user's code output against hidden test cases.
+
+### Phase 5: Testing, Bug Fixing, & Feature Freeze (Dec 1 - Dec 5)
+* **Goal:** Stop adding new features and stabilize the project.
+* **Description:** NO NEW FEATURES. The entire team's focus shifts to testing every part of the application.
+* **Tasks:**
+    * Test all use cases (logging in, completing a lesson, passing a belt, etc.).
+    * Fix all critical bugs.
+    * Ensure all content is loaded and correct.
+
+### Phase 6: Final Submission (Dec 6)
+* **Goal:** Package and submit the project.
+* **Tasks:**
+    * Finalize all documentation.
+    * Prepare for the project presentation/demo.
+    * Submit the code.
+
 # Anticipated Problems
 
 ### Creating an IDE Inside our Website
