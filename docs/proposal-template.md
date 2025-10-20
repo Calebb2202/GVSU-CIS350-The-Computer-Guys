@@ -65,15 +65,15 @@ This Software Requirements Specification (SRS) document defines the features, go
 3.  The code execution environment shall be sandboxed to prevent network access or local file system access.
 
  
-# Anticipated Technologies
+# Anticipated Technologies/Tech Stack
 
-| Category            | Tools & Technologies                                    |
-|---------------------|--------------------------------------------------------|
-| **Development Tools** | VS Code, Git, GitHub, Figma                          |
-| **Languages**         | Python, HTML, JavaScript                             |
-| **Frontend**          | Next.js, React, TypeScript, Tailwind CSS             |
-| **Backend**           | Django, SQLite, Django REST Framework                |
-
+| Category | Tools & Technologies |
+| :--- | :--- |
+| **Frontend** | React, Vite, ContextAPI |
+| **Backend** | Node.js, Express.js |
+| **Database** | Firebase |
+| **Languages** | HTML, CSS, JavaScript |
+| **Tools** | VS Code, Git, GitHub, Postman, npm |
 
 # Method/Approach
 
