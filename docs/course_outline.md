@@ -16,7 +16,7 @@
 
 ---
 
-## Yellow Belt: Control Flow
+## Orange Belt: Control Flow
 *Goal: Control *how* and *when* code executes using logic.*
 
 1.  **Booleans:** The concept of `True` and `False`.
@@ -31,7 +31,7 @@
 
 ---
 
-## Green Belt: Data Structures
+## Blue Belt: Data Structures
 *Goal: Store and organize collections of data efficiently.*
 
 1.  **Lists:** What they are and how to create them.
