@@ -1,14 +1,18 @@
-// This file essentially contanis all the lesson 
-// data and will upload it all to the firebase when ran
-// to run the file type node lesson_creation.js in the terminal
+// This file contains all the lesson data and will upload
+// it to Firebase when run.
+// To run the file, type `node lesson_creation.js` in the terminal.
 
-// This is your one-time "seeding" script.
-// Run it with: node seed.js
 const admin = require('firebase-admin');
 const serviceAccount = require('./serviceAccountKey.json');
 
-// --- Your Lesson & Question Data ---
-// This is where you write all your content, once.
+// --- 1. CONNECT TO FIREBASE ---
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount)
+});
+const db = admin.firestore();
+
+// --- 2. LESSON DATA ---
+// This is where you write all your content.
 const LESSONS_TO_ADD = [
   {
     title: "Welcome to Python",
@@ -323,32 +327,30 @@ const LESSONS_TO_ADD = [
   }
 ];
 
-// --- The Script Logic ---
-// (You don't need to change this part)
-
-// 1. Connect to Firebase
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount)
-});
-const db = admin.firestore();
-
-// 2. The main function
+// --- 3. THE SEEDING FUNCTION ---
 async function seedDatabase() {
-  console.log('Starting to seed the database...');
+  console.log('Starting to seed lessons...');
   const lessonsCollection = db.collection('lessons');
 
   for (const lesson of LESSONS_TO_ADD) {
-    console.log(`Adding lesson: ${lesson.title}`);
+    console.log(`Checking lesson: ${lesson.title}`);
     
-    // We add the lesson to Firestore
-    await lessonsCollection.add(lesson);
+    // Check if a lesson with this title already exists to avoid duplicates
+    const snapshot = await lessonsCollection.where('title', '==', lesson.title).get();
+    
+    if (snapshot.empty) {
+      console.log(`...Adding new lesson: ${lesson.title}`);
+      await lessonsCollection.add(lesson);
+    } else {
+      console.log(`...Lesson "${lesson.title}" already exists. Skipping.`);
+    }
   }
 
-  console.log('Database seeding complete! 🎉');
+  console.log('Lesson seeding complete! 🎉');
   process.exit(0); // This quits the script
 }
 
-// 3. Run the function
+// --- 4. RUN THE SCRIPT ---
 seedDatabase().catch((error) => {
   console.error('Error seeding database:', error);
   process.exit(1); // This quits the script with an error
