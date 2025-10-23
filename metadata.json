@@ -1,0 +1,5 @@
+{
+  "name": "Syntax Sensei",
+  "description": "A Duolingo-style web app that teaches Python through short, adaptive lessons with instant feedback, XP, streaks, and a simple leaderboard.",
+  "requestFramePermissions": []
+}
