@@ -47,8 +47,8 @@ Additionally all dates will just mention the month and day as the year is the sa
 * October 20
 * Caleb Boerma
 
-**Setup Firbase for Project's Database**
-* Setup the Firbase on the firbase website and learn how to put content onto the database.
+**Setup Firebase for Project's Database**
+* Setup the Firebase on the firbase website and learn how to put content onto the database.
 * October 21
 * Caleb Boerma
 
