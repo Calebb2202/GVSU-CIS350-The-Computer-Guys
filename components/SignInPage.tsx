@@ -1,69 +1,46 @@
+// src/components/SignInPage.tsx
+import React from "react";
+import { useNavigate } from "react-router-dom";
+import { signInWithPopup, signInWithRedirect } from "firebase/auth";
+import { auth, googleProvider } from "../services/firebase";
+import { Logo } from "./Icons";
 
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useForm } from 'react-hook-form';
-import { useUserStore } from '../store/stores';
-import { Logo } from './Icons';
-
-interface SignInForm {
-  email: string;
-}
-
-export const SignInPage = () => {
+export const SignInPage: React.FC = () => {
   const navigate = useNavigate();
-  const signIn = useUserStore((state) => state.signIn);
-  const { register, handleSubmit, formState: { errors } } = useForm<SignInForm>();
 
-  const onSubmit = (data: SignInForm) => {
-    signIn(data.email);
-    navigate('/dashboard');
-  };
+  async function handleGoogleSignIn() {
+    try {
+      // Try popup first (desktop)
+      await signInWithPopup(auth, googleProvider);
+      navigate("/dashboard", { replace: true });
+    } catch (err) {
+      console.warn("Popup blocked, reverting to redirect:", err);
+
+      // Fallback for mobile / popup-blocked
+      await signInWithRedirect(auth, googleProvider);
+    }
+  }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-900 p-4">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-            <Logo className="h-16 w-16 mx-auto" />
-            <h1 className="text-3xl font-bold text-white mt-4">Welcome to Syntax Sensei</h1>
-            <p className="text-slate-400 mt-2">Sign in to continue your learning journey.</p>
+    <div className="min-h-screen bg-slate-900 text-slate-100 flex items-center justify-center p-4">
+      <div className="bg-slate-800 rounded-xl p-8 w-full max-w-md shadow-xl">
+        <div className="flex items-center gap-3 mb-6 justify-center">
+          <Logo className="w-10 h-10" />
+          <h1 className="text-2xl font-semibold">Sign in</h1>
         </div>
-        
-        <div className="bg-slate-800 p-8 rounded-lg shadow-2xl">
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-slate-300">
-                Email Address (mock)
-              </label>
-              <input
-                id="email"
-                type="email"
-                {...register('email', { 
-                    required: 'Email is required',
-                    pattern: {
-                        value: /^\S+@\S+$/i,
-                        message: "Invalid email address"
-                    }
-                })}
-                defaultValue="learner@syntax.com"
-                className="mt-1 block w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-md text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-                placeholder="you@example.com"
-              />
-              {errors.email && <p className="mt-2 text-sm text-red-500">{errors.email.message}</p>}
-            </div>
 
-            <div>
-              <button
-                type="submit"
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-800 focus:ring-emerald-500 transition-colors"
-              >
-                Sign In & Start Learning
-              </button>
-            </div>
-          </form>
-          <p className="text-center mt-6 text-xs text-slate-500">
-            This is a mock sign-in. Any valid email format will work.
-          </p>
-        </div>
+        {/* ✅ Google login button */}
+        <button
+          onClick={handleGoogleSignIn}
+          className="w-full flex items-center justify-center gap-3 bg-white text-slate-900 rounded-md py-2 font-medium hover:opacity-90 transition"
+        >
+          <img
+            src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+            alt="Google"
+            className="w-5 h-5"
+          />
+          Continue with Google
+        </button>
       </div>
     </div>
   );

@@ -1,7 +1,8 @@
-
+// App.tsx
 import React from 'react';
 import { HashRouter, Routes, Route, Outlet, Navigate } from 'react-router-dom';
-import { useUserStore } from './store/stores';
+import { useAuth } from './services/AuthContext';
+
 import { LandingPage } from './components/LandingPage';
 import { SignInPage } from './components/SignInPage';
 import { Dashboard } from './components/Dashboard';
@@ -10,57 +11,56 @@ import { Leaderboard } from './components/Leaderboard';
 import { Header } from './components/Header';
 import { UnitPage } from './components/LessonTrackPage';
 
+// 🔐 Wrapper: protects children pages
 const ProtectedRoute = () => {
-  const { user } = useUserStore();
-  if (!user) {
-    return <Navigate to="/signin" replace />;
-  }
+  const { user, loading } = useAuth();
+  if (loading) return <p>Loading…</p>;
+  if (!user) return <Navigate to="/signin" replace />;
   return <Outlet />;
 };
 
-const MainLayout = () => (
-    <div className="flex flex-col min-h-screen">
-        <Header />
-        <main className="flex-grow">
-            <Outlet />
-        </main>
-    </div>
+// 🔹 Everything under Header
+const Shell = () => (
+  <div className="min-h-screen bg-slate-900 text-slate-100">
+    <Header />
+    <main className="p-4 md:p-8">
+      <Outlet />
+    </main>
+  </div>
 );
 
+// ✅ MAIN APP ROUTES
 const App = () => {
-    const { user } = useUserStore();
+  const { user } = useAuth();
 
-    return (
-        <div className="min-h-screen bg-slate-900 text-slate-100">
-             <Routes>
-                <Route path="/" element={<LandingPage />} />
-                <Route path="/signin" element={<SignInPage />} />
-                
-                {/* Standalone lesson page doesn't need the main header */}
-                <Route element={<ProtectedRoute />}>
-                    <Route path="/lessons/:id" element={<LessonPage />} />
-                </Route>
-                
-                {/* Routes with the main header */}
-                <Route element={<MainLayout />}>
-                    <Route element={<ProtectedRoute />}>
-                        <Route path="/dashboard" element={<Dashboard />} />
-                        <Route path="/unit/:unitId" element={<UnitPage />} />
-                        <Route path="/leaderboard" element={<Leaderboard />} />
-                    </Route>
-                </Route>
-                
-                {/* Fallback route */}
-                <Route path="*" element={<Navigate to={user ? "/dashboard" : "/"} replace />} />
-            </Routes>
-        </div>
-    );
+  return (
+    <Routes>
+      {/* Public pages */}
+      <Route path="/" element={<LandingPage />} />
+      <Route path="/signin" element={<SignInPage />} />
+
+      {/* Wrapped with header */}
+      <Route element={<Shell />}>
+        {/* Protected routes */}
+        <Route element={<ProtectedRoute />}>
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/unit/:unitId" element={<UnitPage />} />
+          <Route path="/lesson/:lessonId" element={<LessonPage />} />
+          <Route path="/leaderboard" element={<Leaderboard />} />
+        </Route>
+      </Route>
+
+      {/* Redirect unknown */}
+      <Route path="*" element={<Navigate to={user ? "/dashboard" : "/"} replace />} />
+    </Routes>
+  );
 };
 
+// Router wrapper
 const AppWrapper = () => (
-    <HashRouter>
-        <App />
-    </HashRouter>
-)
+  <HashRouter>
+    <App />
+  </HashRouter>
+);
 
 export default AppWrapper;
