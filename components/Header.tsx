@@ -1,11 +1,12 @@
 
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { useUserStore, useProgressStore } from '../store/stores';
+import { useProgressStore } from '../store/stores';
 import { FlameIcon, StarIcon, Logo } from './Icons';
+import { useAuth } from '../services/AuthContext';
 
 export const Header = () => {
-  const { user } = useUserStore();
+  const { user } = useAuth();
   const { xp, streakDays } = useProgressStore();
   const location = useLocation();
 

@@ -1,7 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { useUserStore, useProgressStore } from '../store/stores';
+import { useProgressStore } from '../store/stores';
+import { useAuth } from '../services/AuthContext';
 import { FlameIcon, StarIcon, BookOpenIcon } from './Icons';
 import { MOCK_XP_DATA } from '../constants';
 
@@ -18,7 +19,7 @@ const StatCard = ({ icon, label, value, colorClass }: { icon: React.ReactNode, l
 );
 
 export const Dashboard = () => {
-    const { user } = useUserStore();
+    const { user } = useAuth();
     const { xp, streakDays } = useProgressStore();
 
     if (!user) {
@@ -27,7 +28,7 @@ export const Dashboard = () => {
 
     return (
         <div className="container mx-auto p-4 sm:p-6 lg:p-8">
-            <h1 className="text-3xl font-bold mb-2">Welcome back, {user.displayName}!</h1>
+            <h1 className="text-3xl font-bold mb-2">Welcome back, {user.displayName || user.email || 'Learner'}!</h1>
             <p className="text-slate-400 mb-8">Let's make some progress today.</p>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
