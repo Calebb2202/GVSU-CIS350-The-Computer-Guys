@@ -1,72 +1,161 @@
 
-import { Lesson, AnswerPayload, CheckResult, Unit } from '../types';
+import { Lesson, AnswerPayload, CheckResult, Unit, LessonItem } from '../types';
 import { PYTHON_LESSON_1, PYTHON_LESSON_2, PYTHON_LESSON_3, PYTHON_BASICS_UNIT, MOCK_LEADERBOARD } from '../constants';
+import { db } from './firebase';
+import { doc, getDoc, collection, getDocs, query, where } from 'firebase/firestore';
 
-const lessons: Record<string, Lesson> = {
+// in-memory fallback for local/dev
+const lessonsFallback: Record<string, Lesson> = {
   'python-basics-1': PYTHON_LESSON_1,
   'python-basics-2': PYTHON_LESSON_2,
   'python-basics-3': PYTHON_LESSON_3,
 };
 
-const units: Record<string, Unit> = {
-    'python-basics': PYTHON_BASICS_UNIT,
-}
-
-export const getUnit = (id: string): Promise<Unit> => {
-    return new Promise((resolve, reject) => {
-        setTimeout(() => {
-            if (units[id]) {
-                resolve(units[id]);
-            } else {
-                reject(new Error('Unit not found'));
-            }
-        }, 300);
-    });
-}
-
-export const getLesson = (id: string): Promise<Lesson> => {
-  return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      if (lessons[id]) {
-        resolve(lessons[id]);
-      } else {
-        reject(new Error('Lesson not found'));
-      }
-    }, 500);
-  });
+const unitsFallback: Record<string, Unit> = {
+  'python-basics': PYTHON_BASICS_UNIT,
 };
 
-export const checkAnswer = (payload: AnswerPayload): Promise<CheckResult> => {
+function mapBeltToTrack(belt: string | undefined): 'beginner' | 'refresh' | 'interview' {
+  if (!belt) return 'beginner';
+  const b = belt.toLowerCase();
+  if (b === 'white' || b === 'yellow' || b === 'green') return 'beginner';
+  if (b === 'blue' || b === 'brown') return 'refresh';
+  return 'interview';
+}
+
+function parseFirestoreLesson(id: string, data: any): Lesson {
+  const items: LessonItem[] = [];
+
+  // top-level content -> first concept card
+  if (data.content) {
+    items.push({
+      id: `concept-0`,
+      type: 'concept',
+      prompt: data.title || 'Introduction',
+      content: data.content,
+      difficulty: 1,
+    });
+  }
+
+  const questions = Array.isArray(data.questions) ? data.questions : [];
+  questions.forEach((q: any, idx: number) => {
+    const qtype = (q.type || '').toLowerCase();
+    let itemType: LessonItem['type'] = 'mcq';
+    if (qtype === 'fill-in-blank' || qtype === 'fill') itemType = 'fill';
+    if (qtype === 'debug') itemType = 'debug';
+    if (qtype === 'concept') itemType = 'concept';
+
+    const item: LessonItem = {
+      id: `q-${idx + 1}`,
+      type: itemType,
+      prompt: q.prompt || q.question || `Question ${idx + 1}`,
+      code: q.code,
+      choices: Array.isArray(q.options) ? q.options : undefined,
+      correct: q.answer,
+      explanation: q.explanation,
+      difficulty: q.difficulty || 2,
+    };
+
+    items.push(item);
+  });
+
+  return {
+    id,
+    title: data.title || id,
+    track: mapBeltToTrack(data.belt),
+    items,
+  };
+}
+
+export const getUnit = async (id: string): Promise<Unit> => {
+  // try Firestore first
+  try {
+    const snap = await getDoc(doc(db, 'units', id));
+    if (snap.exists()) {
+      const data = snap.data();
+      // assume data.lessons is already in the LessonSummary shape stored in Firestore
+      return { id, title: data.title || id, description: data.description || '', lessons: data.lessons || [] } as Unit;
+    }
+  } catch (err) {
+    console.warn('Failed to fetch unit from Firestore, falling back to local unit:', err);
+  }
+
+  // fallback
   return new Promise((resolve, reject) => {
     setTimeout(() => {
-      const lesson = lessons[payload.lessonId];
-      if (!lesson) {
-        return reject(new Error('Lesson not found'));
-      }
-      const item = lesson.items.find((i) => i.id === payload.itemId);
-      if (!item || !item.correct) {
-        return reject(new Error('Item not found or is not a quiz question.'));
-      }
-
-      const submittedValue = payload.value.trim().toLowerCase();
-      const isCorrect = Array.isArray(item.correct)
-        ? item.correct.map(c => c.toLowerCase()).includes(submittedValue)
-        : item.correct.toLowerCase() === submittedValue;
-
-      resolve({
-        correct: isCorrect,
-        correctAnswer: item.correct,
-        feedback: isCorrect ? 'Great job!' : item.explanation || "That's not quite right.",
-        xpDelta: isCorrect ? 10 : 0,
-      });
+      if (unitsFallback[id]) resolve(unitsFallback[id]);
+      else reject(new Error('Unit not found'));
     }, 300);
   });
 };
 
-export const getLeaderboard = (): Promise<Array<{ rank: number; user: string; xp: number }>> => {
-    return new Promise((resolve) => {
-        setTimeout(() => {
-            resolve(MOCK_LEADERBOARD);
-        }, 800);
-    });
+export const getLesson = async (id: string): Promise<Lesson> => {
+  // try firestore doc with that id
+  try {
+    const snap = await getDoc(doc(db, 'lessons', id));
+    if (snap.exists()) {
+      console.log(`Loaded lesson from Firestore (by id): ${id}`);
+      return parseFirestoreLesson(id, snap.data());
+    }
+
+    // If direct doc lookup failed, try to be helpful: if the id contains a number,
+    // try querying Firestore for a lesson with that `lessonNum` field (many of our
+    // Firestore docs use lessonNum). This allows links that use local mock ids
+    // (e.g. `python-basics-1`) to still match Firestore docs that use a different
+    // doc id but have `lessonNum: 1`.
+    const numMatch = id.match(/(\d+)/);
+    if (numMatch) {
+      const lessonNum = Number(numMatch[0]);
+      try {
+        const q = query(collection(db, 'lessons'), where('lessonNum', '==', lessonNum));
+        const res = await getDocs(q);
+        if (!res.empty) {
+          const first = res.docs[0];
+          console.log(`Loaded lesson from Firestore (by lessonNum=${lessonNum}): ${first.id}`);
+          return parseFirestoreLesson(first.id, first.data());
+        }
+      } catch (err) {
+        console.warn('Failed to query lessons by lessonNum:', err);
+      }
+    }
+  } catch (err) {
+    console.warn('Failed to fetch lesson from Firestore, falling back to local lesson:', err);
+  }
+
+  // fallback to in-memory lessons for local/dev
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      if (lessonsFallback[id]) resolve(lessonsFallback[id]);
+      else reject(new Error('Lesson not found'));
+    }, 500);
+  });
+};
+
+export const checkAnswer = async (payload: AnswerPayload): Promise<CheckResult> => {
+  // ensure we can get the lesson (from Firestore or fallback)
+  const lesson = await getLesson(payload.lessonId);
+  const item = lesson.items.find((i) => i.id === payload.itemId || i.id === payload.itemId.replace(/^q-/, 'q-'));
+  if (!item || !item.correct) throw new Error('Item not found or is not a quiz question.');
+
+  const submittedValue = payload.value.trim().toLowerCase();
+  const correctVal = item.correct;
+  const isCorrect = Array.isArray(correctVal)
+    ? correctVal.map((c) => `${c}`.toLowerCase()).includes(submittedValue)
+    : `${correctVal}`.toLowerCase() === submittedValue;
+
+  return {
+    correct: isCorrect,
+    correctAnswer: item.correct as string | string[],
+    feedback: isCorrect ? 'Great job!' : item.explanation || "That's not quite right.",
+    xpDelta: isCorrect ? 10 : 0,
+  };
+};
+
+export const getLeaderboard = async (): Promise<Array<{ rank: number; user: string; xp: number }>> => {
+  // For now return mock leaderboard; can be replaced with Firestore collection read later
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve(MOCK_LEADERBOARD);
+    }, 800);
+  });
 };
