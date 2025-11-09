@@ -42,7 +42,7 @@
 6.  **Working with Dictionaries:** Accessing, adding, and deleting items.
 7.  **Error Spotlight:** The `KeyError`.
 8.  **Tuples:** Immutable (unchangeable) lists.
-9.  **Green Belt Promotion Challenge:** Write code that is given a list of numbers and **calculates the sum and average** of the list.
+9.  **Blue Belt Promotion Challenge:** Write code that is given a list of numbers and **calculates the sum and average** of the list.
 
 ---
 
