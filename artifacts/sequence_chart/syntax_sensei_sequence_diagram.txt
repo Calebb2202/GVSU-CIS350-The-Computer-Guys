@@ -1,0 +1,22 @@
+Paste the following below into the editor at this link: https://sequencediagram.org/
+
+title Getting Lesson Data Sequence Diagram
+
+participant User
+participant App.tsx
+participant LessonPage.tsx
+participant api.ts
+participant firebase.ts
+participant Firebase (Database)
+
+entryspacing 0.8
+User->App.tsx: clicks on a lesson
+App.tsx->LessonPage.tsx: renders component
+LessonPage.tsx->api.ts: getLesson("lesson-1")
+api.ts->firebase.ts: calls to fetch lesson
+firebase.ts->Firebase (Database): fetching lesson
+Firebase (Database)-->firebase.ts: returns lesson 1 document
+firebase.ts-->api.ts: returns JSON format of lesson
+api.ts-->LessonPage.tsx: returns transformed lesson
+LessonPage.tsx->User: renders lesson content
+
