@@ -1,0 +1,24 @@
+Team name: The Computer Guys
+
+Members present: Poom and Caleb
+
+Date: 11/14/2025
+
+Time: 7:00pm-7:30pm
+
+Discussion points:
+
+* Lesson progress bar while doing lesson so user knows when they are close to done
+* create a rough draft of the testing file and documentation on our testing
+* make sure to have everyone next meeting
+
+
+Goals for next week (include responsibilities)
+
+* Integrate all lessons in database to frontend (Dmitry)
+* create tests for the website (everyone)
+* clean up front end overall (remove leaderboard, remove "current track", get new streak symbol that doesn't look like a peanut, remove stuff we aren't using in general, implement logo, etc) (Caleb or Poom)
+* have all lessons give same ammount of xp like 100 and make sure user then unlocks the next lesson (anyone)
+* add a skip lesson button (anyone)
+* Make sure daily streak acurately works (anyone)
+* Lesson progress bar during lesson (anyone) 
