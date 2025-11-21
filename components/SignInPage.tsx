@@ -1,23 +1,25 @@
-// src/components/SignInPage.tsx
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { signInWithPopup, signInWithRedirect } from "firebase/auth";
+import { signInWithPopup, setPersistence, browserLocalPersistence } from "firebase/auth";
 import { auth, googleProvider } from "../services/firebase";
 import { Logo } from "./Icons";
+import { upsertUserProfile } from "../services/userService";
 
 export const SignInPage: React.FC = () => {
   const navigate = useNavigate();
 
   async function handleGoogleSignIn() {
     try {
-      // Try popup first (desktop)
-      await signInWithPopup(auth, googleProvider);
-      navigate("/dashboard", { replace: true });
-    } catch (err) {
-      console.warn("Popup blocked, reverting to redirect:", err);
+      await setPersistence(auth, browserLocalPersistence);
+      const result = await signInWithPopup(auth, googleProvider);
+      const user = result.user;
 
-      // Fallback for mobile / popup-blocked
-      await signInWithRedirect(auth, googleProvider);
+      await upsertUserProfile(user);
+      console.log("✅ Logged in user:", user);
+
+      navigate("/dashboard", { replace: true }); // manual redirect
+    } catch (err) {
+      console.error("⚠️ Sign-in error:", err);
     }
   }
 
@@ -28,8 +30,6 @@ export const SignInPage: React.FC = () => {
           <Logo className="w-10 h-10" />
           <h1 className="text-2xl font-semibold">Sign in</h1>
         </div>
-
-        {/* ✅ Google login button */}
         <button
           onClick={handleGoogleSignIn}
           className="w-full flex items-center justify-center gap-3 bg-white text-slate-900 rounded-md py-2 font-medium hover:opacity-90 transition"
