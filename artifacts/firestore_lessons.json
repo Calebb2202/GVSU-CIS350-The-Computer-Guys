@@ -1,0 +1,39 @@
+[
+  {
+    "id": "lesson-1-white",
+    "belt": "white",
+    "content": "Welcome! In this lesson, we are going to teach you about the basics of programming. A 'program' is a set of instructions for a computer to follow. 'Syntax' is the set of rules, like grammar, that defines how to write those instructions. Python is a beginner friendly language known for its simple, readable syntax. Let's get started!",
+    "lessonNum": 1,
+    "title": "Welcome to Python",
+    "questions": [
+      {
+        "answer": "A set of instructions for a computer",
+        "options": [
+          "A set of instructions for a computer",
+          "A physical computer part",
+          "The grammar of a language",
+          "A bug in the code"
+        ],
+        "prompt": "What is a 'program'?",
+        "type": "mcq"
+      },
+      {
+        "answer": "Syntax",
+        "options": ["Comments", "Syntax", "Variables", "Operators"],
+        "prompt": "The 'rules' or 'grammar' of a programming language is called its...",
+        "type": "mcq"
+      },
+      {
+        "answer": "syntax",
+        "prompt": "Python is known for its simple and readable ____.",
+        "type": "fill-in-blank"
+      },
+      {
+        "answer": "True",
+        "options": ["True", "False"],
+        "prompt": "True or False: Syntax is like the 'grammar' of a programming language.",
+        "type": "mcq"
+      }
+    ]
+  }
+]

@@ -120,7 +120,7 @@ export const LessonPage = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
 
-    const { lesson, currentItemIndex, completedItemIds, loadLesson, answerCurrent, markCurrentAsComplete, nextItem, reset } = useLessonStore();
+    const { lesson, currentItemIndex, completedItemIds, responses, loadLesson, answerCurrent, markCurrentAsComplete, nextItem, retryItems, reset } = useLessonStore();
     const { addXP, updateStreak } = useProgressStore();
     
     const [status, setStatus] = useState<'idle' | 'correct' | 'incorrect'>('idle');
@@ -174,7 +174,8 @@ export const LessonPage = () => {
         const result = await checkAnswer({ lessonId: id, itemId: currentItem.id, value });
         setIsSubmitting(false);
 
-        answerCurrent(result.correct);
+        // record the answer and whether it was correct (include submitted text)
+        answerCurrent(result.correct, value);
         setFeedback(result.feedback);
 
         if (result.correct) {
@@ -196,9 +197,17 @@ export const LessonPage = () => {
         setStatus('idle');
         setFeedback('');
         setHint(null);
-        if(lessonComplete) {
-            navigate('/unit/python-basics');
-        } else {
+
+        // Determine whether marking the current item as completed will finish the lesson.
+        // We compute this locally because markCurrentAsComplete updates the store asynchronously.
+        const alreadyCompleted = completedItemIds.has(currentItem.id);
+        const willBeComplete = lesson && (!alreadyCompleted) && (completedItemIds.size + 1 === lesson.items.length);
+
+        // Mark the current item as complete now that the user has seen the feedback.
+        markCurrentAsComplete();
+
+        if (!willBeComplete) {
+            // If this was NOT the final item, go to the next item.
             nextItem();
         }
     };
@@ -212,15 +221,46 @@ export const LessonPage = () => {
     }
 
     if(lessonComplete) {
+        // Prepare a results summary: only count non-concept items as questions
+        const questionItems = lesson.items.filter(i => i.type !== 'concept');
+        const totalQuestions = questionItems.length || 0;
+        const correctCount = questionItems.reduce((sum, it) => (responses[it.id]?.correct ? sum + 1 : sum), 0);
+        const percentage = totalQuestions > 0 ? Math.round((correctCount / totalQuestions) * 100) : 100;
+        const wrongItems = questionItems.filter(it => !responses[it.id]?.correct);
+
         return (
             <div className="flex flex-col justify-center items-center h-screen text-center p-4">
-                <motion.div initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
-                    <CheckCircleIcon className="w-24 h-24 text-emerald-500 mx-auto" />
-                    <h1 className="text-4xl font-bold mt-4">Lesson Complete!</h1>
-                    <p className="text-slate-400 mt-2">You've mastered {lesson.title}. Great job!</p>
-                    <button onClick={() => navigate('/unit/python-basics')} className="mt-8 bg-emerald-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-emerald-500 transition-colors">
-                        Back to Unit
-                    </button>
+                <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
+                    <CheckCircleIcon className="w-20 h-20 text-emerald-500 mx-auto" />
+                    <h1 className="text-3xl font-bold mt-4">Lesson Results</h1>
+                    <p className="text-slate-400 mt-2">You answered <strong>{correctCount}</strong> out of <strong>{totalQuestions}</strong> questions correctly ({percentage}%).</p>
+
+                    {wrongItems.length > 0 ? (
+                        <div className="mt-6 text-left max-w-3xl">
+                            <h3 className="text-xl font-semibold mb-3">Questions to review</h3>
+                            <div className="space-y-4">
+                                {wrongItems.map((wi) => (
+                                    <div key={wi.id} className="bg-slate-800 p-4 rounded-lg">
+                                        <div className="font-bold">{wi.prompt}</div>
+                                        <div className="text-sm text-slate-300 mt-2">Correct answer: <span className="font-mono text-emerald-300">{Array.isArray(wi.correct) ? wi.correct.join(', ') : String(wi.correct)}</span></div>
+                                        <div className="text-sm text-slate-300">Your answer: <span className="font-mono text-sky-300">{responses[wi.id]?.lastSubmitted ?? '—'}</span></div>
+                                        <div className="mt-2 flex gap-2">
+                                            <button onClick={() => retryItems([wi.id])} className="bg-sky-500 text-white px-3 py-1 rounded">Try this question again</button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    ) : (
+                        <p className="text-slate-400 mt-6">Perfect! No review needed.</p>
+                    )}
+
+                    <div className="mt-8 flex gap-3 justify-center">
+                        {wrongItems.length > 0 && (
+                            <button onClick={() => retryItems(wrongItems.map(i => i.id))} className="bg-emerald-600 text-white font-bold py-2 px-4 rounded hover:bg-emerald-500">Retry incorrect</button>
+                        )}
+                        <button onClick={() => navigate('/unit/python-basics')} className="bg-slate-700 text-white font-bold py-2 px-4 rounded hover:bg-slate-600">Back to Unit</button>
+                    </div>
                 </motion.div>
             </div>
         )

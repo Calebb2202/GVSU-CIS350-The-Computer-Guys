@@ -3,6 +3,10 @@ import { Lesson, AnswerPayload, CheckResult, Unit, LessonItem } from '../types';
 import { PYTHON_LESSON_1, PYTHON_LESSON_2, PYTHON_LESSON_3, PYTHON_BASICS_UNIT, MOCK_LEADERBOARD } from '../constants';
 import { db } from './firebase';
 import { doc, getDoc, collection, getDocs, query, where } from 'firebase/firestore';
+// Static JSON fallback: when Firestore is inaccessible due to security rules during
+// development, you can paste your Firestore lesson export into
+// `artifacts/firestore_lessons.json` and the app will load lessons from there.
+import staticLessons from '../artifacts/firestore_lessons.json';
 
 // in-memory fallback for local/dev
 const lessonsFallback: Record<string, Lesson> = {
@@ -158,4 +162,103 @@ export const getLeaderboard = async (): Promise<Array<{ rank: number; user: stri
       resolve(MOCK_LEADERBOARD);
     }, 800);
   });
+};
+
+/**
+ * Fetch all lessons from Firestore (or fallback) and return as Lesson[]
+ */
+export const getAllLessons = async (): Promise<Lesson[]> => {
+  const triedCollections = ['lessons', 'Lessons', 'lesson'];
+  for (const col of triedCollections) {
+    try {
+      const snaps = await getDocs(collection(db, col));
+      const out: Lesson[] = [];
+      snaps.forEach((d) => {
+        try {
+          out.push(parseFirestoreLesson(d.id, d.data()));
+        } catch (err) {
+          console.warn('Failed to parse lesson doc', d.id, err);
+        }
+      });
+
+      if (out.length > 0) {
+        console.log(`Loaded ${out.length} lessons from Firestore collection '${col}'`);
+        return out;
+      } else {
+        console.warn(`No lessons found in Firestore collection '${col}'. Trying next collection name.`);
+      }
+    } catch (err) {
+      console.warn(`Failed to fetch lessons from Firestore collection '${col}':`, err);
+    }
+  }
+
+  // Try static JSON fallback (helpful for local testing when Firestore rules block reads)
+  try {
+    const staticDocs: any[] = Array.isArray(staticLessons) ? (staticLessons as any[]) : [];
+    if (staticDocs.length > 0) {
+      const parsed: Lesson[] = staticDocs
+        .map((d) => {
+          try {
+            // allow either shape: { id: 'lesson-1-white', ...fields } or full doc object
+            if (d && d.id) return parseFirestoreLesson(d.id, d);
+            // fallback if someone exported with `doc` wrapper
+            if (d && d.doc && d.doc.id) return parseFirestoreLesson(d.doc.id, d.doc);
+          } catch (err) {
+            console.warn('Failed to parse static lesson entry', d, err);
+          }
+          return null;
+        })
+        .filter(Boolean) as Lesson[];
+
+      if (parsed.length > 0) {
+        console.log(`Loaded ${parsed.length} lessons from static JSON fallback`);
+        return parsed;
+      }
+    }
+  } catch (err) {
+    console.warn('Failed to load static fallback lessons:', err);
+  }
+
+  // fallback to in-memory lessons
+  return Object.values(lessonsFallback);
+};
+
+/**
+ * Group lessons by belt (data.belt) and sort within each group by lessonNum (if present)
+ */
+export const groupLessonsByBelt = (lessons: Lesson[]) => {
+  const groups: Record<string, Lesson[]> = {};
+
+  const extractLessonNum = (lesson: Lesson) => {
+    // parse the first number in the id, e.g. lesson-10-orange -> 10
+    const match = lesson.id.match(/(\d+)/);
+    return match ? Number(match[0]) : Number.MAX_SAFE_INTEGER;
+  };
+
+  const extractBeltFromId = (lesson: Lesson) => {
+    // try to parse pattern like 'lesson-10-orange' -> 'orange'
+    const match = lesson.id.match(/-(?:\d+)-([a-zA-Z]+)/);
+    if (match) return match[1].toLowerCase();
+    // fallback: try to use a 'belt' or original track if present
+    const maybeBelt = (lesson as any).belt || (lesson as any).track;
+    return typeof maybeBelt === 'string' ? maybeBelt.toLowerCase() : 'uncategorized';
+  };
+
+  lessons.forEach((l) => {
+    const key = extractBeltFromId(l);
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(l);
+  });
+
+  // sort each group by numeric lesson number then by id
+  Object.keys(groups).forEach((k) => {
+    groups[k].sort((a, b) => {
+      const na = extractLessonNum(a);
+      const nb = extractLessonNum(b);
+      if (na !== nb) return na - nb;
+      return a.id.localeCompare(b.id);
+    });
+  });
+
+  return groups;
 };

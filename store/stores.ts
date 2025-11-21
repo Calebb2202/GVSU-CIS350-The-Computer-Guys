@@ -74,10 +74,12 @@ interface LessonState {
   currentItemIndex: number;
   attemptsForCurrent: number;
   difficulty: number; // 1 to 5
+  responses: Record<string, { correct: boolean; attempts: number; lastSubmitted?: string }>;
   loadLesson: (lesson: Lesson) => void;
-  answerCurrent: (correct: boolean) => void;
+  answerCurrent: (correct: boolean, submitted?: string) => void;
   markCurrentAsComplete: () => void;
   nextItem: () => void;
+  retryItems: (ids: string[]) => void;
   reset: () => void;
 }
 
@@ -87,6 +89,7 @@ export const useLessonStore = create<LessonState>((set, get) => ({
   currentItemIndex: 0,
   attemptsForCurrent: 0,
   difficulty: 1,
+  responses: {},
   
   loadLesson: (lesson) => {
     const firstItem = lesson.items.find(item => item.difficulty === 1) || lesson.items[0];
@@ -97,11 +100,11 @@ export const useLessonStore = create<LessonState>((set, get) => ({
       difficulty: 1, 
       completedItemIds: new Set(),
       attemptsForCurrent: 0,
+      responses: {},
     });
   },
-
-  answerCurrent: (correct) => {
-    const { attemptsForCurrent, difficulty, lesson, currentItemIndex } = get();
+  answerCurrent: (correct, submitted) => {
+    const { attemptsForCurrent, difficulty, lesson, currentItemIndex, responses } = get();
     set({ attemptsForCurrent: attemptsForCurrent + 1 });
 
     if (correct && attemptsForCurrent === 0) {
@@ -109,11 +112,17 @@ export const useLessonStore = create<LessonState>((set, get) => ({
     } else if (!correct && attemptsForCurrent >= 1) {
       set({ difficulty: Math.max(difficulty - 1, 1) });
     }
-    
+
     const currentItem = lesson?.items[currentItemIndex];
     if (currentItem) {
-        set(state => ({ completedItemIds: new Set(state.completedItemIds).add(currentItem.id) }));
+      const prev = responses[currentItem.id];
+      const nextAttempts = (prev?.attempts || 0) + 1;
+      set(state => ({ responses: { ...state.responses, [currentItem.id]: { correct, attempts: nextAttempts, lastSubmitted: submitted } } }));
     }
+
+    // NOTE: do NOT mark the current item as completed here. We want to show
+    // correctness feedback to the user first; the item will be marked completed
+    // when the user clicks Continue (see LessonPage.handleContinue).
   },
   
   markCurrentAsComplete: () => {
@@ -122,6 +131,28 @@ export const useLessonStore = create<LessonState>((set, get) => ({
     if (currentItem) {
         set(state => ({ completedItemIds: new Set(state.completedItemIds).add(currentItem.id) }));
     }
+  },
+
+  retryItems: (ids: string[]) => {
+    const { lesson } = get();
+    if (!lesson) return;
+    set(state => {
+      const nextCompleted = new Set(state.completedItemIds);
+      const nextResponses = { ...state.responses };
+      ids.forEach(id => {
+        nextCompleted.delete(id);
+        if (id in nextResponses) delete nextResponses[id];
+      });
+
+      let nextIndex = state.currentItemIndex;
+      if (ids.length > 0) {
+        const firstId = ids[0];
+        const idx = lesson.items.findIndex(i => i.id === firstId);
+        if (idx >= 0) nextIndex = idx;
+      }
+
+      return { completedItemIds: nextCompleted, responses: nextResponses, currentItemIndex: nextIndex, attemptsForCurrent: 0 };
+    });
   },
 
   nextItem: () => {
@@ -152,5 +183,5 @@ export const useLessonStore = create<LessonState>((set, get) => ({
     }
   },
 
-  reset: () => set({ lesson: null, completedItemIds: new Set(), currentItemIndex: 0, attemptsForCurrent: 0, difficulty: 1 }),
+  reset: () => set({ lesson: null, completedItemIds: new Set(), currentItemIndex: 0, attemptsForCurrent: 0, difficulty: 1, responses: {} }),
 }));
