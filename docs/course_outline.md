@@ -27,7 +27,6 @@
 6.  **`for` Loops:** Repeating code for each item in a sequence.
 7.  **The `range()` Function:** Creating number sequences.
 8.  **Error Spotlight:** The "Off-by-One" Error.
-9.  **Yellow Belt Promotion Challenge:** A "Guess the Number" game.
 
 ---
 
@@ -41,7 +40,6 @@
 5.  **Dictionaries:** Storing data as `key:value` pairs.
 6.  **Working with Dictionaries:** Accessing, adding, and deleting items.
 7.  **Tuples:** Immutable (unchangeable) lists.
-8.  **Blue Belt Promotion Challenge:** Write code that is given a list of numbers and **calculates the sum and average** of the list.
 
 ---
 
@@ -55,4 +53,3 @@
 5.  **What is OOP?:** The concept of Classes and Objects.
 6.  **Creating a Class:** The `class` keyword and `__init__()`.
 7.  **Class Methods:** Defining functions *inside* a class.
-8. **Black Belt Promotion Challenge:** Write a **`Car` class** with `__init__()` and a method. The `__init__` should store `make`, `model`, and `year`. The method, called `get_info()`, should **return a string** like "2025 Ford Mustang".

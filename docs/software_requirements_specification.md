@@ -1,3 +1,5 @@
+**WARNING:** This is the old software_requirments_specifications.md file this document has been replaced by software_requirments_specifications_final.md
+
 # Overview
 
 This Software Requirements Specification (SRS) document defines the features, goals, and constraints for the "Syntax Sensei" project. Its purpose is to provide a clear, shared understanding for the development team of what the software will do and how it will perform.
