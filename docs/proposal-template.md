@@ -5,64 +5,73 @@
 
 # Introduction
 
-Our Project is named "Syntax Sensei", it is a Python Programming language learning website. Users will follow lessons to learn Python starting basic and getting increasingly difficult. The lessons are created by ChatGPT but are verified to be accurate and helpful by us. The project will focus on gamefying the learning similar to Duolingo but for coding.
+Our Project is named "Syntax Sensei", it is a Python Programming language learning website. Users will follow lessons to learn Python starting basic and getting increasingly difficult. The lessons are created by AI but are verified to be accurate and helpful by our team. The project will focus on gamefying the learning similar to Duolingo but for coding.
 
 ### **Features:**
 # Overview
 
-This Software Requirements Specification (SRS) document defines the features, goals, and constraints for the "Syntax Sensei" project. Its purpose is to provide a clear, shared understanding for the development team of what the software will do and how it will perform.
+This document defines the features, goals, and constraints for the "Syntax Sensei" project. Its purpose is to provide a clear, shared understanding for the development team of what the software will do and how it will perform.
 
-# Functional Requirements
+# Software Requirments
+## Functional Requirements
 
-## 1. User Account Management
-1.  The system shall allow users to access and complete lessons without creating an account (guest mode).
-2.  The system shall not save any lesson progress for users in guest mode.
-3.  The system shall allow a user to register and log in using their existing Google account (Single Sign-On).
-4.  The system shall, upon first login, offer the user an optional proficiency quiz to place them in an appropriate "belt" section.
-5.  The system shall allow a logged-in user to log out.
-6.  The system shall save all lesson and belt progress only for users logged in with their Google account.
+### User Account Management
+| ID | Requirement |
+| :-------------: | :---------- |
+| FR1 | The system shall allow users to access and complete lessons without creating an account (guest mode). |
+| FR2 | The system shall not save any lesson progress for users in guest mode. |
+| FR3 | The system shall allow a user to register and log in using their existing Google account (Single Sign-On). |
+| FR4 | The system shall, upon successful login, save the user's current belt and total XP. |
+| FR5 | The system shall allow a logged-in user to log out of their account. |
 
-## 2. User Progression Dashboard ("Belt System")
-1.  The system shall provide a dedicated dashboard page, accessible only to logged-in users, which displays their current "belt" rank.
-2.  The system shall organize lessons into "belt" sections (e.g., "White Belt Section," "Yellow Belt Section").
-3.  The system shall display a list of all completed lessons for the logged-in user on their dashboard.
-4.  The system shall lock all lessons in a higher "belt" section until the user has passed the "Belt Promotion Challenge" for the prerequisite belt.
-5.  The system shall automatically promote a logged-in user to the next belt rank after they successfully pass the "Belt Promotion Challenge."
+### User Progression Dashboard
+| ID | Requirement |
+| :-------------: | :---------- |
+| FR6 | The system shall provide a dedicated dashboard page, which will be populated with user-specific data only for logged-in users. |
+| FR7 | The system shall display the user's current "belt" rank on the dashboard. |
+| FR8 | The system shall display the user's total earned XP (Experience Points) on the dashboard. |
+| FR9 | The system shall organize lessons into "belt" units (e.g., "White Belt," "Orange Belt") and display them on the dashboard. |
+| FR10 | The dashboard shall serve as the primary navigation hub, allowing users to select and start lessons from the displayed units. |
 
-## 3. Lesson Module
-1.  The system shall present lessons containing multiple-choice questions.
-2.  The system shall present lessons containing fill-in-the-blank questions.
-3.  The system shall present lessons containing error-checking questions, which require the user to identify an error's line and type from drop-down menus.
-4.  The system shall provide immediate feedback (e.g., "Correct" or "Incorrect") to the user after they submit an answer to a question.
-5.  The system shall store the completion status of each lesson only for users who are logged in.
-6.  The system shall lock all lessons within a belt section until the preceding lesson is completed.
+### Lesson Module
+| ID | Requirement |
+| :-------------: | :---------- |
+| FR11 | The system shall present a "Concept" pop-up or modal at the beginning of each lesson explaining the topic. |
+| FR12 | The system shall present lessons containing multiple-choice questions. |
+| FR13 | The system shall present lessons containing fill-in-the-blank questions. |
+| FR14 | The system shall provide immediate feedback (e.g., "Correct" or "Incorrect") to the user after they submit an answer. |
+| FR15 | The system shall, upon successful completion of an entire lesson, grant the user a predefined amount of XP. |
+| FR16 | The system shall display a progress bar within the lesson interface to show the user's progress toward completing the current lesson. |
 
-## 4. Belt Promotion Challenge (IDE)
-1.  The system shall present a text editor interface for the user to write Python code.
-2.  The system shall provide a "Run Code" button that executes the user's code against a predefined input.
-3.  The system shall display the output (`stdout`) generated by the user's code execution in a console window.
-4.  The system shall provide a "Submit Answer" button that validates the user's code output against one or more hidden test cases.
-5.  The system shall display a "Pass" message and unlock the next belt section upon a successful submission.
-6.  The system shall display a "Fail" message, indicating which test case failed, upon an unsuccessful submission.
 
-# Non-Functional Requirements
+## Non-Functional Requirements
 
-## 1. User Account Management
-1.  The system shall securely implement the Google OAuth 2.0 (Single Sign-On) protocol to authenticate users.
-2.  The login page and proficiency quiz shall load in under 2 seconds when run locally.
+### Performance & Usability
+| ID | Requirement |
+| :-------------: | :---------- |
+| NFR1 | The system shall provide feedback to user interactions (e.g., submitting an answer) in under 500 milliseconds. |
+| NFR2 | The user's dashboard and lesson pages shall load, on a standard internet connection, in under 3 seconds. |
+| NFR3 | The application shall be designed for and functional on desktop screen resolutions (minimum width 1280px). |
+| NFR4 | The application shall render correctly on the latest stable versions of Google Chrome and Firefox. |
+| NFR5 | The application shall maintain a consistent and intuitive user interface (UI) design across all pages. |
 
-## 2. User Progression Dashboard ("Belt System")
-1.  The application shall be designed for and functional on desktop screen resolutions with a minimum width of 1280 pixels.
-2.  The progression graphics (e.g., belt images) shall render correctly on the latest versions of Google Chrome and Firefox.
+### Security
+| ID | Requirement |
+| :-------------: | :---------- |
+| NFR6 | The system shall securely implement the Google OAuth 2.0 (Single Sign-On) protocol to authenticate users. |
+| NFR7 | The backend API shall use CORS (Cross-Origin Resource Sharing) to restrict access to only the deployed frontend application. |
+| NFR8 | The backend's Firebase Admin service account key shall not be stored in the public code repository. |
+| NFR9 | The frontend application shall store user authentication information in secure browser storage (e.g., `localStorage`). |
+| NFR10 | The backend API endpoints that modify user data shall be protected to only accept requests from authenticated sources. |
 
-## 3. Lesson Module
-1.  The lesson interface shall be navigable using only a keyboard (Tab to navigate, Enter to select).
-2.  The system shall provide feedback to user interactions (e.g., submitting an answer) in under 500 milliseconds.
-
-## 4. Belt Promotion Challenge (IDE)
-1.  The code editor interface shall provide Python syntax highlighting.
-2.  The code execution environment shall impose a 5-second timeout on user code execution to prevent infinite loops.
-3.  The code execution environment shall be sandboxed to prevent network access or local file system access.
+### Backend & Database
+| ID | Requirement |
+| :-------------: | :---------- |
+| NFR11 | The backend server shall be written in Node.js using the Express framework. |
+| NFR12 | The backend API endpoints shall return data in the JSON (JavaScript Object Notation) format. |
+| NFR13 | The system shall use Google Firestore as its NoSQL database for storing user and lesson data. |
+| NFR14 | The backend API shall be stateless (no user session data shall be stored on the server itself). |
+| NFR15 | All core lesson and challenge content shall be seeded into the database via a JavaScript script (`lesson_creation.js`) for maintainability. |
 
  
 # Anticipated Technologies/Tech Stack
