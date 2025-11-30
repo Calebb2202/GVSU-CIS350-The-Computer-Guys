@@ -121,7 +121,7 @@ export const LessonPage = () => {
     const { user } = useAuth();
 
     const { lesson, currentItemIndex, completedItemIds, responses, loadLesson, answerCurrent, markCurrentAsComplete, nextItem, retryItems, reset } = useLessonStore();
-    const { addXP, updateStreak, addCompletedLesson, setBelt } = useProgressStore();
+    const { addXP, setStreak, addCompletedLesson, setBelt } = useProgressStore();
     
     const [status, setStatus] = useState<'idle' | 'correct' | 'incorrect'>('idle');
     const [feedback, setFeedback] = useState('');
@@ -167,7 +167,7 @@ export const LessonPage = () => {
             setStatus('incorrect');
         }
 
-    }, [id, currentItem, answerCurrent, addXP, updateStreak]);
+    }, [id, currentItem, answerCurrent]);
     
     useEffect(() => {
         // We add the check *inside* the hook
@@ -182,16 +182,17 @@ export const LessonPage = () => {
                 });
 
                 try {
-                    const { xpAwarded, newBelt } = await saveLessonResults(user.uid, id, questionResponses);
-                    
-                    // Sync local state *after* successful save
-                    addXP(xpAwarded);
-                    addCompletedLesson(id);
-                    updateStreak(); // Now we update the streak
-                    if (newBelt) {
-                        setBelt(newBelt);
-                        console.log("Promoted to new belt:", newBelt);
-                    }
+                        // Destructure all the new data from the API response
+                        const { xpAwarded, newBelt, streakDays, lastCompletedDate } = await saveLessonResults(user.uid, id, questionResponses);
+                        
+                        // Sync local state *after* successful save
+                        addXP(xpAwarded);
+                        addCompletedLesson(id);
+                        setStreak(streakDays, lastCompletedDate);
+                        if (newBelt) {
+                            setBelt(newBelt);
+                            console.log("Promoted to new belt:", newBelt);
+                        }
 
                 } catch (error) {
                     console.error("Failed to save final lesson completion:", error);
@@ -202,7 +203,7 @@ export const LessonPage = () => {
             saveFinalLesson();
         }
     // We add 'lessonComplete' to the dependency array
-    }, [lessonComplete, user, id, hasSavedFinal, lesson, responses, addXP, addCompletedLesson, updateStreak, setBelt]);
+    }, [lessonComplete, user, id, hasSavedFinal, lesson, responses, addXP, addCompletedLesson, setStreak, setBelt]);
 
     const handleConceptContinue = () => {
         markCurrentAsComplete();

@@ -303,7 +303,6 @@ const checkAndPromoteBelt = async (userId: string, userDocData: any, allLessons:
         if (currentBeltIndex > -1 && currentBeltIndex + 1 < beltKeys.length) {
             const nextBelt = beltKeys[currentBeltIndex + 1];
             const userRef = doc(db, 'users', userId);
-            await updateDoc(userRef, { belt: nextBelt });
             return nextBelt; // Return the new belt
         }
     }
@@ -314,33 +313,77 @@ const checkAndPromoteBelt = async (userId: string, userDocData: any, allLessons:
 export interface CompletionResult {
     xpAwarded: number;
     newBelt: string | null;
+    streakDays: number;
+    lastCompletedDate: string;
 }
 
-// This is our new central function for completing a lesson
+// Completing lesson logic
 const completeLesson = async (userId: string, lessonId: string, xpToAward: number): Promise<CompletionResult> => {
     if (!userId) throw new Error("User not authenticated");
 
     const userRef = doc(db, 'users', userId);
     
     try {
-        // 1. Update user's XP and completed lessons list
-        await updateDoc(userRef, {
-            xp: increment(xpToAward),
-            completedLessons: arrayUnion(lessonId)
-        });
-        
-        // 2. Get the user's updated document
+        // 1. Get the user's CURRENT state first
         const userDocSnap = await getDoc(userRef);
-        if (!userDocSnap.exists()) throw new Error("User document not found after update.");
+        if (!userDocSnap.exists()) throw new Error("User document not found.");
         
-        // 3. Check for a belt promotion
-        const allLessons = await getAllLessons(); // Re-fetch all lessons to check groups
-        const newBelt = await checkAndPromoteBelt(userId, userDocSnap.data(), allLessons);
+        const userData = userDocSnap.data();
+
+        // 2. Calculate new streak (logic moved from stores.ts)
+        const today = new Date().toISOString().split('T')[0];
+        const lastDate = userData.lastCompletedDate;
+        let newStreakDays = userData.streakDays || 0;
+
+        if (today !== lastDate) { // Only run if it's a new day
+            const yesterday = new Date();
+            yesterday.setDate(yesterday.getDate() - 1);
+            const yesterdayStr = yesterday.toISOString().split('T')[0];
+
+            if (lastDate === yesterdayStr) {
+                newStreakDays += 1; // Consecutive day
+            } else {
+                newStreakDays = 1; // Reset streak
+            }
+        }
+        // If it's the same day, newStreakDays remains unchanged
+
+        // 3. Prepare data for belt check (using new completed lesson)
+        const updatedUserDataForCheck = {
+            ...userData,
+            completedLessons: [...(userData.completedLessons || []), lessonId],
+            belt: userData.belt || 'white',
+        };
+
+        // 4. Check for a belt promotion (this function no longer writes to DB)
+        const allLessons = await getAllLessons();
+        const newBelt = await checkAndPromoteBelt(userId, updatedUserDataForCheck, allLessons);
+
+        // 5. Create a single update object for Firebase
+        const updates: any = {
+            xp: increment(xpToAward),
+            completedLessons: arrayUnion(lessonId),
+            streakDays: newStreakDays,
+            lastCompletedDate: today, // Always set to today
+        };
+
+        if (newBelt) {
+            updates.belt = newBelt; // Add belt promotion to the same update
+        }
+
+        // 6. Perform the single database update
+        await updateDoc(userRef, updates);
         
-        return { xpAwarded: xpToAward, newBelt };
+        // 7. Return all new state info to the client
+        return { 
+            xpAwarded: xpToAward, 
+            newBelt, 
+            streakDays: newStreakDays, 
+            lastCompletedDate: today 
+        };
 
     } catch (error) {
-        console.error("Failed to complete lesson and check promotion:", error);
+        console.error("Failed to complete lesson, update streak, and check promotion:", error);
         throw new Error("Could not save progress to database.");
     }
 };

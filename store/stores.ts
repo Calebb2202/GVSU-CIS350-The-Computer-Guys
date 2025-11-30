@@ -30,8 +30,6 @@ export const useUserStore = create<UserState>()(
   )
 );
 
-
-
 // Progress Store
 interface ProgressState {
   xp: number;
@@ -40,7 +38,7 @@ interface ProgressState {
   completedLessons: string[]; 
   belt: string;
   addXP: (amount: number) => void;
-  updateStreak: () => void;
+  setStreak: (days: number, lastDate: string) => void;
   addCompletedLesson: (lessonId: string) => void; 
   setBelt: (belt: string) => void;
   loadProgress: (data: Partial<ProgressState>) => void;
@@ -57,20 +55,8 @@ export const useProgressStore = create<ProgressState>()(
       
       addXP: (amount) => set((state) => ({ xp: state.xp + amount })),
       
-      updateStreak: () => {
-        const today = new Date().toISOString().split('T')[0];
-        const lastDate = get().lastCompletedDate;
-        if (today === lastDate) return;
-
-        const yesterday = new Date();
-        yesterday.setDate(yesterday.getDate() - 1);
-        const yesterdayStr = yesterday.toISOString().split('T')[0];
-
-        if (lastDate === yesterdayStr) {
-          set(state => ({ streakDays: state.streakDays + 1, lastCompletedDate: today }));
-        } else {
-          set({ streakDays: 1, lastCompletedDate: today });
-        }
+      setStreak: (days, lastDate) => {
+        set({ streakDays: days, lastCompletedDate: lastDate });
       },
       
       addCompletedLesson: (lessonId) => {
