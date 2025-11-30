@@ -1,6 +1,6 @@
 
 import { Lesson, AnswerPayload, CheckResult, Unit, LessonItem } from '../types';
-import { PYTHON_LESSON_1, PYTHON_LESSON_2, PYTHON_LESSON_3, PYTHON_BASICS_UNIT, MOCK_LEADERBOARD } from '../constants';
+import { PYTHON_LESSON_1, PYTHON_LESSON_2, PYTHON_LESSON_3, PYTHON_BASICS_UNIT} from '../constants';
 import { db } from './firebase';
 import { doc, getDoc, collection, getDocs, query, where, updateDoc, increment, arrayUnion } from 'firebase/firestore';
 // Static JSON fallback: when Firestore is inaccessible due to security rules during
@@ -153,15 +153,6 @@ export const checkAnswer = async (payload: AnswerPayload): Promise<CheckResult> 
     feedback: isCorrect ? 'Great job!' : item.explanation || "That's not quite right.",
     xpDelta: isCorrect ? 10 : 0,
   };
-};
-
-export const getLeaderboard = async (): Promise<Array<{ rank: number; user: string; xp: number }>> => {
-  // For now return mock leaderboard; can be replaced with Firestore collection read later
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve(MOCK_LEADERBOARD);
-    }, 800);
-  });
 };
 
 /**

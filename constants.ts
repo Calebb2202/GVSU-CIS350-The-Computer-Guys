@@ -205,19 +205,6 @@ export const PYTHON_BASICS_UNIT: Unit = {
     ]
 };
 
-export const MOCK_LEADERBOARD = [
-    { rank: 1, user: 'CodeWizard', xp: 9850 },
-    { rank: 2, user: 'PyPioneer', xp: 9200 },
-    { rank: 3, user: 'LogicLord', xp: 8750 },
-    { rank: 4, user: 'SyntaxSlayer', xp: 8100 },
-    { rank: 5, user: 'DebugDemon', xp: 7600 },
-    { rank: 6, user: 'AlgoAce', xp: 7150 },
-    { rank: 7, user: 'ScriptSavvy', xp: 6800 },
-    { rank: 8, user: 'DataDynamo', xp: 6300 },
-    { rank: 9, user: 'BitByte', xp: 5900 },
-    { rank: 10, user: 'LoopLegend', xp: 5500 },
-];
-
 export const MOCK_XP_DATA = [
     { day: 'Mon', xp: 50 },
     { day: 'Tue', xp: 75 },
