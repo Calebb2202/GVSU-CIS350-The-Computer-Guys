@@ -3,7 +3,7 @@ import { Link, useParams, useNavigate } from 'react-router-dom';
 import { getAllLessons, groupLessonsByBelt, skipLesson } from '../services/api';
 import { Unit, LessonSummary } from '../types';
 import { useProgressStore } from '../store/stores';
-import { LockClosedIcon, StarIcon, FastForwardIcon } from './Icons';
+import { LockClosedIcon, StarIcon, FastForwardIcon, WhiteBelt, OrangeBelt, BlueBelt, BlackBelt } from './Icons';
 import { motion } from 'framer-motion';
 import { useAuth } from '../services/AuthContext';
 
@@ -82,6 +82,21 @@ const LessonCard = ({ lesson, isUnlocked, isCompleted, onSkip }: LessonCardProps
             </div>
         </motion.div>
     );
+};
+
+// helps display belt icon next to text
+const BeltIcon = ({ belt, className }: { belt: string, className?: string }) => {
+    switch (belt) {
+        case 'orange':
+            return <OrangeBelt className={className} />;
+        case 'blue':
+            return <BlueBelt className={className} />;
+        case 'black':
+            return <BlackBelt className={className} />;
+        case 'white':
+        default:
+            return <WhiteBelt className={className} />;
+    }
 };
 
 export const UnitPage = () => {
@@ -234,7 +249,10 @@ export const UnitPage = () => {
             <div className="mt-10 space-y-8">
                 {beltKeys.filter(b => selectedBelt === 'all' || selectedBelt === b).map((belt, beltIndex) => (
                     <motion.div key={belt} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="">
-                        <h2 className="text-2xl font-bold capitalize mb-4">{belt}</h2>
+                        <div className="flex items-center gap-3 mb-4">
+                            <BeltIcon belt={belt} className="w-8 h-8" />
+                            <h2 className="text-2xl font-bold capitalize">{belt}</h2>
+                        </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {groups[belt].map((lesson, lessonIndex) => {
                                 
