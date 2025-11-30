@@ -2,7 +2,7 @@
 import { Lesson, AnswerPayload, CheckResult, Unit, LessonItem } from '../types';
 import { PYTHON_LESSON_1, PYTHON_LESSON_2, PYTHON_LESSON_3, PYTHON_BASICS_UNIT, MOCK_LEADERBOARD } from '../constants';
 import { db } from './firebase';
-import { doc, getDoc, collection, getDocs, query, where } from 'firebase/firestore';
+import { doc, getDoc, collection, getDocs, query, where, updateDoc, increment, arrayUnion } from 'firebase/firestore';
 // Static JSON fallback: when Firestore is inaccessible due to security rules during
 // development, you can paste your Firestore lesson export into
 // `artifacts/firestore_lessons.json` and the app will load lessons from there.
@@ -261,4 +261,49 @@ export const groupLessonsByBelt = (lessons: Lesson[]) => {
   });
 
   return groups;
+};
+
+/**
+ * Allows a user to skip a lesson, granting them the full XP for it
+ * and marking it as completed in their profile.
+ * @param userId - The user's Firebase auth ID
+ * @param lessonId - The ID of the lesson to skip
+ * @returns The amount of XP awarded
+ */
+export const skipLesson = async (userId: string, lessonId: string): Promise<number> => {
+  let lesson: Lesson;
+  try {
+    // 1. Get the lesson data to calculate XP
+    lesson = await getLesson(lessonId);
+  } catch (error) {
+    console.error("Failed to get lesson for skipping:", error);
+    throw new Error("Lesson not found");
+  }
+  
+  // 2. Calculate XP: 10 XP for every non-concept item
+  const questionItems = lesson.items.filter(item => item.type !== 'concept');
+  const xpToAward = questionItems.length * 10;
+
+  if (!userId) {
+    console.error("User is not authenticated, cannot skip lesson.");
+    throw new Error("User not authenticated");
+  }
+
+  try {
+    // 3. Update the user's document in Firestore
+    // (Assuming user data is stored in a 'users' collection by their UID)
+    const userRef = doc(db, 'users', userId);
+    
+    await updateDoc(userRef, {
+      xp: increment(xpToAward),
+      completedLessons: arrayUnion(lessonId)
+    });
+    
+    // 4. Return the awarded XP
+    return xpToAward;
+
+  } catch (error) {
+    console.error("Failed to update user profile in Firestore:", error);
+    throw new Error("Could not save progress to database.");
+  }
 };

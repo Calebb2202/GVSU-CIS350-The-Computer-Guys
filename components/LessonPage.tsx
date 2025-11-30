@@ -1,9 +1,7 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getLesson, checkAnswer } from '../services/api';
-// import { getHint } from '../services/geminiService';
 import { useLessonStore, useProgressStore } from '../store/stores';
 import { LessonItem } from '../types';
 import { CheckCircleIcon, XCircleIcon, BookOpenIcon } from './Icons';
@@ -121,14 +119,12 @@ export const LessonPage = () => {
     const navigate = useNavigate();
 
     const { lesson, currentItemIndex, completedItemIds, responses, loadLesson, answerCurrent, markCurrentAsComplete, nextItem, retryItems, reset } = useLessonStore();
-    const { addXP, updateStreak } = useProgressStore();
+    const { addXP, updateStreak, addCompletedLesson } = useProgressStore();
     
     const [status, setStatus] = useState<'idle' | 'correct' | 'incorrect'>('idle');
     const [feedback, setFeedback] = useState('');
     const [isLoading, setIsLoading] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
-    // const [hint, setHint] = useState<string | null>(null);
-    // const [isHintLoading, setIsHintLoading] = useState(false);
 
     useEffect(() => {
         const initLesson = async () => {
@@ -146,7 +142,6 @@ export const LessonPage = () => {
         };
         initLesson();
         return () => reset();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [id, loadLesson, navigate, reset]);
 
     const currentItem = lesson?.items[currentItemIndex];
@@ -160,7 +155,6 @@ export const LessonPage = () => {
         const result = await checkAnswer({ lessonId: id, itemId: currentItem.id, value });
         setIsSubmitting(false);
 
-        // record the answer and whether it was correct (include submitted text)
         answerCurrent(result.correct, value);
         setFeedback(result.feedback);
 
@@ -183,16 +177,12 @@ export const LessonPage = () => {
         setStatus('idle');
         setFeedback('');
 
-        // Determine whether marking the current item as completed will finish the lesson.
-        // We compute this locally because markCurrentAsComplete updates the store asynchronously.
         const alreadyCompleted = completedItemIds.has(currentItem.id);
         const willBeComplete = lesson && (!alreadyCompleted) && (completedItemIds.size + 1 === lesson.items.length);
 
-        // Mark the current item as complete now that the user has seen the feedback.
         markCurrentAsComplete();
 
         if (!willBeComplete) {
-            // If this was NOT the final item, go to the next item.
             nextItem();
         }
     };

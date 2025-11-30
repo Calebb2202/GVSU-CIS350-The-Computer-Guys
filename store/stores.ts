@@ -35,8 +35,11 @@ interface ProgressState {
   xp: number;
   streakDays: number;
   lastCompletedDate: string | null;
+  completedLessons: string[]; 
   addXP: (amount: number) => void;
   updateStreak: () => void;
+  addCompletedLesson: (lessonId: string) => void; 
+  loadProgress: (data: Partial<ProgressState>) => void;
 }
 
 export const useProgressStore = create<ProgressState>()(
@@ -45,7 +48,10 @@ export const useProgressStore = create<ProgressState>()(
       xp: 0,
       streakDays: 0,
       lastCompletedDate: null,
+      completedLessons: [],
+      
       addXP: (amount) => set((state) => ({ xp: state.xp + amount })),
+      
       updateStreak: () => {
         const today = new Date().toISOString().split('T')[0];
         const lastDate = get().lastCompletedDate;
@@ -61,11 +67,20 @@ export const useProgressStore = create<ProgressState>()(
           set({ streakDays: 1, lastCompletedDate: today });
         }
       },
+      
+      addCompletedLesson: (lessonId) => {
+        set((state) => ({
+          completedLessons: [...state.completedLessons, lessonId]
+        }));
+      },
+      
+      loadProgress: (data) => {
+        set((state) => ({ ...state, ...data }));
+      },
     }),
     { name: 'syntax-sensei-progress' }
   )
 );
-
 
 // Lesson Store
 interface LessonState {
