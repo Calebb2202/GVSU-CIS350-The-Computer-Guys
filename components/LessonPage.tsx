@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { getLesson, checkAnswer } from '../services/api';
+import { getLesson, checkAnswer, saveLessonResults } from '../services/api';
+import { useAuth } from '../services/AuthContext';
 import { useLessonStore, useProgressStore } from '../store/stores';
 import { LessonItem } from '../types';
 import { CheckCircleIcon, XCircleIcon, BookOpenIcon } from './Icons';
@@ -117,14 +118,16 @@ const FillBlank = ({ item, onSubmit, disabled }: { item: LessonItem, onSubmit: (
 export const LessonPage = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
+    const { user } = useAuth();
 
     const { lesson, currentItemIndex, completedItemIds, responses, loadLesson, answerCurrent, markCurrentAsComplete, nextItem, retryItems, reset } = useLessonStore();
-    const { addXP, updateStreak, addCompletedLesson } = useProgressStore();
+    const { addXP, updateStreak, addCompletedLesson, setBelt } = useProgressStore();
     
     const [status, setStatus] = useState<'idle' | 'correct' | 'incorrect'>('idle');
     const [feedback, setFeedback] = useState('');
     const [isLoading, setIsLoading] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [hasSavedFinal, setHasSavedFinal] = useState(false);
 
     useEffect(() => {
         const initLesson = async () => {
@@ -160,14 +163,47 @@ export const LessonPage = () => {
 
         if (result.correct) {
             setStatus('correct');
-            addXP(result.xpDelta);
-            updateStreak();
         } else {
             setStatus('incorrect');
         }
 
     }, [id, currentItem, answerCurrent, addXP, updateStreak]);
     
+    useEffect(() => {
+        // We add the check *inside* the hook
+        if (lessonComplete && user && id && !hasSavedFinal && lesson) {
+            const saveFinalLesson = async () => {
+                // Filter responses to only include non-concept items
+                const questionResponses = { ...responses };
+                lesson.items.forEach(item => {
+                    if (item.type === 'concept') {
+                        delete questionResponses[item.id];
+                    }
+                });
+
+                try {
+                    const { xpAwarded, newBelt } = await saveLessonResults(user.uid, id, questionResponses);
+                    
+                    // Sync local state *after* successful save
+                    addXP(xpAwarded);
+                    addCompletedLesson(id);
+                    updateStreak(); // Now we update the streak
+                    if (newBelt) {
+                        setBelt(newBelt);
+                        console.log("Promoted to new belt:", newBelt);
+                    }
+
+                } catch (error) {
+                    console.error("Failed to save final lesson completion:", error);
+                } finally {
+                    setHasSavedFinal(true);
+                }
+            };
+            saveFinalLesson();
+        }
+    // We add 'lessonComplete' to the dependency array
+    }, [lessonComplete, user, id, hasSavedFinal, lesson, responses, addXP, addCompletedLesson, updateStreak, setBelt]);
+
     const handleConceptContinue = () => {
         markCurrentAsComplete();
         nextItem();
@@ -196,6 +232,8 @@ export const LessonPage = () => {
     }
 
     if(lessonComplete) {
+        
+
         // Prepare a results summary: only count non-concept items as questions
         const questionItems = lesson.items.filter(i => i.type !== 'concept');
         const totalQuestions = questionItems.length || 0;

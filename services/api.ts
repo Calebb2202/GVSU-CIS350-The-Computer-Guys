@@ -270,7 +270,102 @@ export const groupLessonsByBelt = (lessons: Lesson[]) => {
  * @param lessonId - The ID of the lesson to skip
  * @returns The amount of XP awarded
  */
-export const skipLesson = async (userId: string, lessonId: string): Promise<number> => {
+// --- NEW BELT PROMOTION LOGIC ---
+
+// This helper function checks if a user should be promoted
+const checkAndPromoteBelt = async (userId: string, userDocData: any, allLessons: Lesson[]) => {
+    const currentBelt = userDocData.belt || 'white';
+    const completedLessons = userDocData.completedLessons || [];
+
+    const groups = groupLessonsByBelt(allLessons);
+    
+    // Create a stable belt order based on the sorting in groupLessonsByBelt
+    const beltKeys = Object.keys(groups).sort((a, b) => {
+        const firstNum = (arr: Lesson[] = []) => {
+            // Use the lessonNum property if it exists, otherwise parse the ID
+            const l = arr[0];
+            if (!l) return Number.MAX_SAFE_INTEGER;
+            // @ts-ignore
+            if (l.lessonNum) return l.lessonNum; 
+            const match = l.id.match(/(\d+)/);
+            return match ? Number(match[0]) : Number.MAX_SAFE_INTEGER;
+        };
+        return firstNum(groups[a]) - firstNum(groups[b]);
+    });
+
+    const currentBeltLessons = groups[currentBelt] || [];
+    // Check if all lessons for the *current* belt are now completed
+    const allInBeltCompleted = currentBeltLessons.every(lesson => completedLessons.includes(lesson.id));
+
+    if (allInBeltCompleted && currentBeltLessons.length > 0) {
+        const currentBeltIndex = beltKeys.indexOf(currentBelt);
+        // Check if there is a next belt to promote to
+        if (currentBeltIndex > -1 && currentBeltIndex + 1 < beltKeys.length) {
+            const nextBelt = beltKeys[currentBeltIndex + 1];
+            const userRef = doc(db, 'users', userId);
+            await updateDoc(userRef, { belt: nextBelt });
+            return nextBelt; // Return the new belt
+        }
+    }
+    return null; // No promotion
+};
+
+// This is the new result type we'll return
+export interface CompletionResult {
+    xpAwarded: number;
+    newBelt: string | null;
+}
+
+// This is our new central function for completing a lesson
+const completeLesson = async (userId: string, lessonId: string, xpToAward: number): Promise<CompletionResult> => {
+    if (!userId) throw new Error("User not authenticated");
+
+    const userRef = doc(db, 'users', userId);
+    
+    try {
+        // 1. Update user's XP and completed lessons list
+        await updateDoc(userRef, {
+            xp: increment(xpToAward),
+            completedLessons: arrayUnion(lessonId)
+        });
+        
+        // 2. Get the user's updated document
+        const userDocSnap = await getDoc(userRef);
+        if (!userDocSnap.exists()) throw new Error("User document not found after update.");
+        
+        // 3. Check for a belt promotion
+        const allLessons = await getAllLessons(); // Re-fetch all lessons to check groups
+        const newBelt = await checkAndPromoteBelt(userId, userDocSnap.data(), allLessons);
+        
+        return { xpAwarded: xpToAward, newBelt };
+
+    } catch (error) {
+        console.error("Failed to complete lesson and check promotion:", error);
+        throw new Error("Could not save progress to database.");
+    }
+};
+
+/**
+ * NEW function for saving results from a completed lesson
+ */
+export const saveLessonResults = async (
+    userId: string, 
+    lessonId: string, 
+    responses: Record<string, { correct: boolean; attempts: number }>
+): Promise<CompletionResult> => {
+    
+    // 1. Calculate XP: 10 XP for each *correct* item
+    const correctCount = Object.values(responses).filter(r => r.correct).length;
+    const xpToAward = correctCount * 10;
+    
+    // 2. Call the central completion function
+    return await completeLesson(userId, lessonId, xpToAward);
+};
+
+/**
+ * MODIFIED function for skipping a lesson
+ */
+export const skipLesson = async (userId: string, lessonId: string): Promise<CompletionResult> => {
   let lesson: Lesson;
   try {
     // 1. Get the lesson data to calculate XP
@@ -290,20 +385,12 @@ export const skipLesson = async (userId: string, lessonId: string): Promise<numb
   }
 
   try {
-    // 3. Update the user's document in Firestore
-    // (Assuming user data is stored in a 'users' collection by their UID)
-    const userRef = doc(db, 'users', userId);
-    
-    await updateDoc(userRef, {
-      xp: increment(xpToAward),
-      completedLessons: arrayUnion(lessonId)
-    });
-    
-    // 4. Return the awarded XP
-    return xpToAward;
+    // 3. Use the new central function
+    return await completeLesson(userId, lessonId, xpToAward);
 
   } catch (error) {
     console.error("Failed to update user profile in Firestore:", error);
     throw new Error("Could not save progress to database.");
   }
 };
+

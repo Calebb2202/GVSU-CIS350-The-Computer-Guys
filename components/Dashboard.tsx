@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useProgressStore } from '../store/stores';
 import { useAuth } from '../services/AuthContext';
-import { FlameIcon, StarIcon, BookOpenIcon } from './Icons';
+import { FlameIcon, StarIcon, WhiteBelt, OrangeBelt, BlueBelt, BlackBelt } from './Icons';
 import { MOCK_XP_DATA } from '../constants';
 
 const StatCard = ({ icon, label, value, colorClass }: { icon: React.ReactNode, label: string, value: string | number, colorClass: string }) => (
@@ -18,9 +18,25 @@ const StatCard = ({ icon, label, value, colorClass }: { icon: React.ReactNode, l
     </div>
 );
 
+const BeltIcon = ({ belt, className }: { belt: string, className?: string }) => {
+    switch (belt) {
+        case 'orange':
+            return <OrangeBelt className={className} />;
+        case 'blue':
+            return <BlueBelt className={className} />;
+        case 'black':
+            return <BlackBelt className={className} />;
+        case 'white':
+        default:
+            return <WhiteBelt className={className} />;
+    }
+};
+
 export const Dashboard = () => {
     const { user } = useAuth();
-    const { xp, streakDays } = useProgressStore();
+    const { xp, streakDays, belt } = useProgressStore();
+    const beltName = belt || 'white';
+    const currentBelt = belt.charAt(0).toUpperCase() + belt.slice(1);
 
     if (!user) {
         return <div className="p-8 text-center">Loading user data...</div>;
@@ -45,9 +61,9 @@ export const Dashboard = () => {
                     colorClass="bg-orange-500/20"
                 />
                  <StatCard 
-                    icon={<BookOpenIcon className="w-6 h-6 text-sky-400" />}
-                    label="Current Track"
-                    value="Python Basics"
+                    icon={<BeltIcon belt={beltName} className="w-8 h-8" />}
+                    label="Current Belt"
+                    value={currentBelt}
                     colorClass="bg-sky-500/20"
                 />
             </div>

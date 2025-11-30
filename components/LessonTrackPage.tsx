@@ -86,7 +86,7 @@ const LessonCard = ({ lesson, isUnlocked, isCompleted, onSkip }: LessonCardProps
 
 export const UnitPage = () => {
     const { unitId } = useParams<{ unitId: string }>();
-    const { xp, completedLessons, addCompletedLesson, addXP } = useProgressStore();
+    const { xp, completedLessons, addCompletedLesson, addXP, setBelt } = useProgressStore();
     const [unit, setUnit] = useState<Unit | null>(null);
     const [loading, setLoading] = useState(true);
     const [groups, setGroups] = useState<Record<string, LessonSummary[]>>({});
@@ -144,11 +144,19 @@ export const UnitPage = () => {
         console.log(`Attempting to skip lesson: ${lessonId} for user: ${user.uid}`);
 
         try {
-            const xpAwarded = await skipLesson(user.uid, lessonId);
+            // 1. Destructure the object returned from skipLesson
+            const { xpAwarded, newBelt } = await skipLesson(user.uid, lessonId);
 
-            // Update local state store
-            addXP(xpAwarded);
+            // 2. Update local state store
+            addXP(xpAwarded); // Now xpAwarded is correctly a number
             addCompletedLesson(lessonId);
+
+            // 3. Handle the new belt, if one was returned
+            if (newBelt) {
+                setBelt(newBelt);
+                console.log(`Promoted to new belt: ${newBelt}`);
+            }
+
             console.log(`Successfully skipped lesson, ${xpAwarded} XP awarded.`);
 
         } catch (error) {

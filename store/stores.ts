@@ -30,15 +30,19 @@ export const useUserStore = create<UserState>()(
   )
 );
 
+
+
 // Progress Store
 interface ProgressState {
   xp: number;
   streakDays: number;
   lastCompletedDate: string | null;
   completedLessons: string[]; 
+  belt: string;
   addXP: (amount: number) => void;
   updateStreak: () => void;
   addCompletedLesson: (lessonId: string) => void; 
+  setBelt: (belt: string) => void;
   loadProgress: (data: Partial<ProgressState>) => void;
 }
 
@@ -49,6 +53,7 @@ export const useProgressStore = create<ProgressState>()(
       streakDays: 0,
       lastCompletedDate: null,
       completedLessons: [],
+      belt: 'white',
       
       addXP: (amount) => set((state) => ({ xp: state.xp + amount })),
       
@@ -74,6 +79,8 @@ export const useProgressStore = create<ProgressState>()(
         }));
       },
       
+      setBelt: (belt) => set({ belt }),
+
       loadProgress: (data) => {
         set((state) => ({ ...state, ...data }));
       },

@@ -36,6 +36,7 @@ useEffect(() => {
                     completedLessons: data.completedLessons || [],
                     streakDays: data.streakDays || 0,
                     lastCompletedDate: data.lastCompletedDate || null,
+                    belt: data.belt || 'white',
                 });
             } else {
                 // --- NEW USER: Create their profile ---
@@ -47,6 +48,7 @@ useEffect(() => {
                     completedLessons: [],
                     streakDays: 0,
                     lastCompletedDate: null,
+                    belt: 'white',
                 };
 
                 try {
@@ -62,13 +64,14 @@ useEffect(() => {
                     completedLessons: defaultUserData.completedLessons,
                     streakDays: defaultUserData.streakDays,
                     lastCompletedDate: defaultUserData.lastCompletedDate,
+                    belt: defaultUserData.belt,
                 });
             }
         } else {
             // --- User is Logged Out ---
             setUser(null);
             // Reset the store to its default state
-            loadProgress({ xp: 0, completedLessons: [], streakDays: 0, lastCompletedDate: null });
+            loadProgress({ xp: 0, completedLessons: [], streakDays: 0, lastCompletedDate: null, belt: 'white' });
         }
         setLoading(false);
     });
