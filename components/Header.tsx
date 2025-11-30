@@ -12,8 +12,7 @@ export const Header = () => {
 
   const navItems = [
     { href: '/dashboard', label: 'Dashboard' },
-    { href: '/unit/python-basics', label: 'Lessons' },
-    { href: '/leaderboard', label: 'Leaderboard' },
+    { href: '/unit/python-basics', label: 'Lessons' }
   ];
 
   if (!user) {
