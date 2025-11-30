@@ -3,10 +3,10 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getLesson, checkAnswer } from '../services/api';
-import { getHint } from '../services/geminiService';
+// import { getHint } from '../services/geminiService';
 import { useLessonStore, useProgressStore } from '../store/stores';
 import { LessonItem } from '../types';
-import { CheckCircleIcon, XCircleIcon, LightbulbIcon, BookOpenIcon } from './Icons';
+import { CheckCircleIcon, XCircleIcon, BookOpenIcon } from './Icons';
 
 // --- Sub-components defined outside the main component ---
 
@@ -127,8 +127,8 @@ export const LessonPage = () => {
     const [feedback, setFeedback] = useState('');
     const [isLoading, setIsLoading] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [hint, setHint] = useState<string | null>(null);
-    const [isHintLoading, setIsHintLoading] = useState(false);
+    // const [hint, setHint] = useState<string | null>(null);
+    // const [isHintLoading, setIsHintLoading] = useState(false);
 
     useEffect(() => {
         const initLesson = async () => {
@@ -152,25 +152,11 @@ export const LessonPage = () => {
     const currentItem = lesson?.items[currentItemIndex];
     const lessonComplete = lesson && completedItemIds.size === lesson.items.length;
 
-    const handleGetHint = async () => {
-        if (!currentItem) return;
-        setIsHintLoading(true);
-        setHint(null);
-        try {
-            const generatedHint = await getHint(currentItem.prompt, currentItem.code);
-            setHint(generatedHint);
-        } catch (error) {
-            setHint("Could not fetch hint.");
-        } finally {
-            setIsHintLoading(false);
-        }
-    }
 
     const handleSubmit = useCallback(async (value: string) => {
         if (!id || !currentItem) return;
         
         setIsSubmitting(true);
-        setHint(null);
         const result = await checkAnswer({ lessonId: id, itemId: currentItem.id, value });
         setIsSubmitting(false);
 
@@ -196,7 +182,6 @@ export const LessonPage = () => {
     const handleContinue = () => {
         setStatus('idle');
         setFeedback('');
-        setHint(null);
 
         // Determine whether marking the current item as completed will finish the lesson.
         // We compute this locally because markCurrentAsComplete updates the store asynchronously.
@@ -296,14 +281,6 @@ export const LessonPage = () => {
 
                                 <div className="mt-6">
                                     <QuestionComponent item={currentItem} onSubmit={handleSubmit} disabled={isSubmitting || status !== 'idle'}/>
-                                </div>
-                                
-                                <div className="text-center mt-4">
-                                    <button onClick={handleGetHint} disabled={isHintLoading || status !== 'idle'} className="flex items-center gap-2 mx-auto text-sm text-sky-400 hover:text-sky-300 disabled:text-slate-500 transition-colors">
-                                        <LightbulbIcon className="w-4 h-4" />
-                                        {isHintLoading ? 'Getting hint...' : 'Get a hint from AI'}
-                                    </button>
-                                    {hint && <p className="text-slate-400 text-sm mt-2">{hint}</p>}
                                 </div>
                             </div>
                         )}
