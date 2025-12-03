@@ -1,12 +1,11 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { getLesson, checkAnswer } from '../services/api';
-import { getHint } from '../services/geminiService';
+import { getLesson, checkAnswer, saveLessonResults } from '../services/api';
+import { useAuth } from '../services/AuthContext';
 import { useLessonStore, useProgressStore } from '../store/stores';
 import { LessonItem } from '../types';
-import { CheckCircleIcon, XCircleIcon, LightbulbIcon, BookOpenIcon } from './Icons';
+import { CheckCircleIcon, XCircleIcon, BookOpenIcon } from './Icons';
 
 // --- Sub-components defined outside the main component ---
 
@@ -119,16 +118,16 @@ const FillBlank = ({ item, onSubmit, disabled }: { item: LessonItem, onSubmit: (
 export const LessonPage = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
+    const { user } = useAuth();
 
-    const { lesson, currentItemIndex, completedItemIds, loadLesson, answerCurrent, markCurrentAsComplete, nextItem, reset } = useLessonStore();
-    const { addXP, updateStreak } = useProgressStore();
+    const { lesson, currentItemIndex, completedItemIds, responses, loadLesson, answerCurrent, markCurrentAsComplete, nextItem, retryItems, reset } = useLessonStore();
+    const { addXP, setStreak, addCompletedLesson, setBelt } = useProgressStore();
     
     const [status, setStatus] = useState<'idle' | 'correct' | 'incorrect'>('idle');
     const [feedback, setFeedback] = useState('');
     const [isLoading, setIsLoading] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [hint, setHint] = useState<string | null>(null);
-    const [isHintLoading, setIsHintLoading] = useState(false);
+    const [hasSavedFinal, setHasSavedFinal] = useState(false);
 
     useEffect(() => {
         const initLesson = async () => {
@@ -146,47 +145,66 @@ export const LessonPage = () => {
         };
         initLesson();
         return () => reset();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [id, loadLesson, navigate, reset]);
 
     const currentItem = lesson?.items[currentItemIndex];
     const lessonComplete = lesson && completedItemIds.size === lesson.items.length;
 
-    const handleGetHint = async () => {
-        if (!currentItem) return;
-        setIsHintLoading(true);
-        setHint(null);
-        try {
-            const generatedHint = await getHint(currentItem.prompt, currentItem.code);
-            setHint(generatedHint);
-        } catch (error) {
-            setHint("Could not fetch hint.");
-        } finally {
-            setIsHintLoading(false);
-        }
-    }
 
     const handleSubmit = useCallback(async (value: string) => {
         if (!id || !currentItem) return;
         
         setIsSubmitting(true);
-        setHint(null);
         const result = await checkAnswer({ lessonId: id, itemId: currentItem.id, value });
         setIsSubmitting(false);
 
-        answerCurrent(result.correct);
+        answerCurrent(result.correct, value);
         setFeedback(result.feedback);
 
         if (result.correct) {
             setStatus('correct');
-            addXP(result.xpDelta);
-            updateStreak();
         } else {
             setStatus('incorrect');
         }
 
-    }, [id, currentItem, answerCurrent, addXP, updateStreak]);
+    }, [id, currentItem, answerCurrent]);
     
+    useEffect(() => {
+        // We add the check *inside* the hook
+        if (lessonComplete && user && id && !hasSavedFinal && lesson) {
+            const saveFinalLesson = async () => {
+                // Filter responses to only include non-concept items
+                const questionResponses = { ...responses };
+                lesson.items.forEach(item => {
+                    if (item.type === 'concept') {
+                        delete questionResponses[item.id];
+                    }
+                });
+
+                try {
+                        // Destructure all the new data from the API response
+                        const { xpAwarded, newBelt, streakDays, lastCompletedDate } = await saveLessonResults(user.uid, id, questionResponses);
+                        
+                        // Sync local state *after* successful save
+                        addXP(xpAwarded);
+                        addCompletedLesson(id);
+                        setStreak(streakDays, lastCompletedDate);
+                        if (newBelt) {
+                            setBelt(newBelt);
+                            console.log("Promoted to new belt:", newBelt);
+                        }
+
+                } catch (error) {
+                    console.error("Failed to save final lesson completion:", error);
+                } finally {
+                    setHasSavedFinal(true);
+                }
+            };
+            saveFinalLesson();
+        }
+    // We add 'lessonComplete' to the dependency array
+    }, [lessonComplete, user, id, hasSavedFinal, lesson, responses, addXP, addCompletedLesson, setStreak, setBelt]);
+
     const handleConceptContinue = () => {
         markCurrentAsComplete();
         nextItem();
@@ -195,10 +213,13 @@ export const LessonPage = () => {
     const handleContinue = () => {
         setStatus('idle');
         setFeedback('');
-        setHint(null);
-        if(lessonComplete) {
-            navigate('/unit/python-basics');
-        } else {
+
+        const alreadyCompleted = completedItemIds.has(currentItem.id);
+        const willBeComplete = lesson && (!alreadyCompleted) && (completedItemIds.size + 1 === lesson.items.length);
+
+        markCurrentAsComplete();
+
+        if (!willBeComplete) {
             nextItem();
         }
     };
@@ -212,15 +233,48 @@ export const LessonPage = () => {
     }
 
     if(lessonComplete) {
+        
+
+        // Prepare a results summary: only count non-concept items as questions
+        const questionItems = lesson.items.filter(i => i.type !== 'concept');
+        const totalQuestions = questionItems.length || 0;
+        const correctCount = questionItems.reduce((sum, it) => (responses[it.id]?.correct ? sum + 1 : sum), 0);
+        const percentage = totalQuestions > 0 ? Math.round((correctCount / totalQuestions) * 100) : 100;
+        const wrongItems = questionItems.filter(it => !responses[it.id]?.correct);
+
         return (
             <div className="flex flex-col justify-center items-center h-screen text-center p-4">
-                <motion.div initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
-                    <CheckCircleIcon className="w-24 h-24 text-emerald-500 mx-auto" />
-                    <h1 className="text-4xl font-bold mt-4">Lesson Complete!</h1>
-                    <p className="text-slate-400 mt-2">You've mastered {lesson.title}. Great job!</p>
-                    <button onClick={() => navigate('/unit/python-basics')} className="mt-8 bg-emerald-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-emerald-500 transition-colors">
-                        Back to Unit
-                    </button>
+                <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
+                    <CheckCircleIcon className="w-20 h-20 text-emerald-500 mx-auto" />
+                    <h1 className="text-3xl font-bold mt-4">Lesson Results</h1>
+                    <p className="text-slate-400 mt-2">You answered <strong>{correctCount}</strong> out of <strong>{totalQuestions}</strong> questions correctly ({percentage}%).</p>
+
+                    {wrongItems.length > 0 ? (
+                        <div className="mt-6 text-left max-w-3xl">
+                            <h3 className="text-xl font-semibold mb-3">Questions to review</h3>
+                            <div className="space-y-4">
+                                {wrongItems.map((wi) => (
+                                    <div key={wi.id} className="bg-slate-800 p-4 rounded-lg">
+                                        <div className="font-bold">{wi.prompt}</div>
+                                        <div className="text-sm text-slate-300 mt-2">Correct answer: <span className="font-mono text-emerald-300">{Array.isArray(wi.correct) ? wi.correct.join(', ') : String(wi.correct)}</span></div>
+                                        <div className="text-sm text-slate-300">Your answer: <span className="font-mono text-sky-300">{responses[wi.id]?.lastSubmitted ?? '—'}</span></div>
+                                        <div className="mt-2 flex gap-2">
+                                            <button onClick={() => retryItems([wi.id])} className="bg-sky-500 text-white px-3 py-1 rounded">Try this question again</button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    ) : (
+                        <p className="text-slate-400 mt-6">Perfect! No review needed.</p>
+                    )}
+
+                    <div className="mt-8 flex gap-3 justify-center">
+                        {wrongItems.length > 0 && (
+                            <button onClick={() => retryItems(wrongItems.map(i => i.id))} className="bg-emerald-600 text-white font-bold py-2 px-4 rounded hover:bg-emerald-500">Retry incorrect</button>
+                        )}
+                        <button onClick={() => navigate('/unit/python-basics')} className="bg-slate-700 text-white font-bold py-2 px-4 rounded hover:bg-slate-600">Back to Unit</button>
+                    </div>
                 </motion.div>
             </div>
         )
@@ -256,14 +310,6 @@ export const LessonPage = () => {
 
                                 <div className="mt-6">
                                     <QuestionComponent item={currentItem} onSubmit={handleSubmit} disabled={isSubmitting || status !== 'idle'}/>
-                                </div>
-                                
-                                <div className="text-center mt-4">
-                                    <button onClick={handleGetHint} disabled={isHintLoading || status !== 'idle'} className="flex items-center gap-2 mx-auto text-sm text-sky-400 hover:text-sky-300 disabled:text-slate-500 transition-colors">
-                                        <LightbulbIcon className="w-4 h-4" />
-                                        {isHintLoading ? 'Getting hint...' : 'Get a hint from AI'}
-                                    </button>
-                                    {hint && <p className="text-slate-400 text-sm mt-2">{hint}</p>}
                                 </div>
                             </div>
                         )}
