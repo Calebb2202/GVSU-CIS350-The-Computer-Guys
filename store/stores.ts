@@ -37,6 +37,7 @@ interface ProgressState {
   lastCompletedDate: string | null;
   completedLessons: string[]; 
   belt: string;
+  xpByDay: Record<string, number>;
   addXP: (amount: number) => void;
   setStreak: (days: number, lastDate: string) => void;
   addCompletedLesson: (lessonId: string) => void; 
@@ -52,8 +53,14 @@ export const useProgressStore = create<ProgressState>()(
       lastCompletedDate: null,
       completedLessons: [],
       belt: 'white',
+  xpByDay: {},
       
-      addXP: (amount) => set((state) => ({ xp: state.xp + amount })),
+      addXP: (amount) => set((state) => {
+        const today = new Date().toISOString().split('T')[0];
+        const prev = state.xpByDay || {};
+        const todayPrev = prev[today] || 0;
+        return { xp: state.xp + amount, xpByDay: { ...prev, [today]: todayPrev + amount } };
+      }),
       
       setStreak: (days, lastDate) => {
         set({ streakDays: days, lastCompletedDate: lastDate });

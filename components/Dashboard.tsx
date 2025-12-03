@@ -33,14 +33,22 @@ const BeltIcon = ({ belt, className }: { belt: string, className?: string }) => 
 };
 
 export const Dashboard = () => {
-    const { user } = useAuth();
-    const { xp, streakDays, belt } = useProgressStore();
+    const { user, loading } = useAuth();
+    const { xp, streakDays, belt, xpByDay } = useProgressStore();
     const beltName = belt || 'white';
     const currentBelt = belt.charAt(0).toUpperCase() + belt.slice(1);
 
-    if (!user) {
+    if (loading) {
         return <div className="p-8 text-center">Loading user data...</div>;
     }
+
+    if (!user) {
+        return <div className="p-8 text-center">Please sign in to view your dashboard.</div>;
+    }
+
+    // For the presentation/demo we use MOCK_XP_DATA so the chart always shows
+    // consistent demo values. This will be swapped to real data (xpByDay) later.
+    const weeklyData = MOCK_XP_DATA;
 
     return (
         <div className="container mx-auto p-4 sm:p-6 lg:p-8">
@@ -73,7 +81,7 @@ export const Dashboard = () => {
                      <h2 className="text-xl font-bold mb-4">Weekly XP Progress</h2>
                      <div className="h-64 w-full">
                         <ResponsiveContainer>
-                            <BarChart data={MOCK_XP_DATA} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
+                            <BarChart data={weeklyData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
                                 <CartesianGrid strokeDasharray="3 3" stroke="#475569" />
                                 <XAxis dataKey="day" stroke="#94a3b8" />
                                 <YAxis stroke="#94a3b8" />
@@ -89,7 +97,7 @@ export const Dashboard = () => {
                             </BarChart>
                         </ResponsiveContainer>
                      </div>
-                </div>
+                 </div>
 
                 <div className="bg-gradient-to-br from-emerald-600 to-green-700 p-6 rounded-lg flex flex-col items-start justify-center text-white">
                     <h2 className="text-2xl font-bold">Continue Your Journey</h2>

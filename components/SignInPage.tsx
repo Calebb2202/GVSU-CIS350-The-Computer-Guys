@@ -4,9 +4,11 @@ import { useNavigate } from "react-router-dom";
 import { signInWithPopup, signInWithRedirect } from "firebase/auth";
 import { auth, googleProvider } from "../services/firebase";
 import { Logo } from "./Icons";
+import { useAuth } from "../services/AuthContext";
 
 export const SignInPage: React.FC = () => {
   const navigate = useNavigate();
+  const { signInAsGuest } = useAuth();
 
   async function handleGoogleSignIn() {
     try {
@@ -41,6 +43,16 @@ export const SignInPage: React.FC = () => {
           />
           Continue with Google
         </button>
+        
+        {/* Continue as guest */}
+        <div className="mt-4 text-center">
+          <button
+            onClick={() => { signInAsGuest('Guest'); navigate('/dashboard', { replace: true }); }}
+            className="w-full mt-3 bg-slate-700 text-white rounded-md py-2 font-medium hover:opacity-90 transition"
+          >
+            Continue as Guest
+          </button>
+        </div>
       </div>
     </div>
   );

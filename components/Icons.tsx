@@ -112,11 +112,9 @@ export const LightbulbIcon = ({ className }: { className?: string }) => (
 );
 
 export const Logo = ({ className }: { className?: string }) => (
-    <svg className={className} viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
-        <path fill="none" d="M0 0h256v256H0z"/>
-        <path fill="currentColor" className="text-emerald-500" d="m96.3 72.3 80-48a8 8 0 0 1 11.4 8.3l-48 80a8.1 8.1 0 0 1-10.7.7 8 8 0 0 1-.7-10.7l48-80-80 48a8 8 0 0 1-10-10Z"/>
-        <path fill="currentColor" className="text-sky-500" d="M159.7 183.7 80 232a8 8 0 0 1-11.4-8.3l48.3-79.7a8.1 8.1 0 0 1 10.7-.7 8 8 0 0 1 .7 10.7l-48.3 79.7 79.7-48.3a8 8 0 0 1 10 10Z"/>
-    </svg>
+  // The app will load the PNG from the public folder at runtime.
+  // Place your logo at `/public/logo.png` and we will serve it as `/logo.png`.
+  <img src="/logo.png" alt="Syntax Sensei" className={className} />
 );
 
 export const BookOpenIcon = ({ className }: { className?: string }) => (

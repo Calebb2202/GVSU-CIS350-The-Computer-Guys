@@ -285,7 +285,25 @@ export const LessonPage = () => {
     return (
         <div className="flex flex-col h-screen max-h-screen">
             <div className="container mx-auto px-4 py-4 flex-shrink-0">
-                <ProgressBar current={completedItemIds.size} total={lesson.items.length} />
+                <div className="flex items-center justify-between gap-4">
+                    <div className="flex-1">
+                        <ProgressBar current={completedItemIds.size} total={lesson.items.length} />
+                    </div>
+                    <div className="flex-shrink-0">
+                        <button
+                            onClick={() => {
+                                const confirmed = window.confirm('Exit lesson? Your progress in this lesson will be lost. Are you sure you want to exit?');
+                                if (confirmed) {
+                                    reset();
+                                    navigate('/unit/python-basics');
+                                }
+                            }}
+                            className="ml-4 bg-transparent border border-slate-700 text-slate-200 px-3 py-2 rounded-md hover:bg-slate-800"
+                        >
+                            Exit Lesson
+                        </button>
+                    </div>
+                </div>
             </div>
             <div className="flex-grow flex items-center justify-center p-4">
                  <AnimatePresence mode="wait">

@@ -15,9 +15,10 @@ interface LessonCardProps {
     isUnlocked: boolean;
     isCompleted: boolean;
     onSkip: (lessonId: string) => void;
+    allowSkip?: boolean;
 }
 
-const LessonCard = ({ lesson, isUnlocked, isCompleted, onSkip }: LessonCardProps) => {
+const LessonCard = ({ lesson, isUnlocked, isCompleted, onSkip, allowSkip }: LessonCardProps) => {
     const cardVariants = {
         hidden: { opacity: 0, y: 20 },
         visible: { opacity: 1, y: 0 },
@@ -50,7 +51,7 @@ const LessonCard = ({ lesson, isUnlocked, isCompleted, onSkip }: LessonCardProps
                                 {isCompleted ? 'Review Lesson' : 'Start Lesson'}
                             </span>
                             {/* Add Skip button only if unlocked and not completed */}
-                            {!isCompleted && (
+                            {!isCompleted && allowSkip && (
                                 <button 
                                     onClick={handleSkipClick}
                                     title="Skip Lesson"
@@ -276,11 +277,15 @@ export const UnitPage = () => {
                                     }
                                 }
 
-                                // A lesson is unlocked if it's the very first lesson, OR its predecessor is completed.
-                                const isUnlocked = isFirstLessonOfAll || (prevLessonId && completedLessons.includes(prevLessonId));
+                                // A lesson is unlocked for guests (all unlocked). For signed-in users follow progression.
+                                const isGuest = (user as any)?.isGuest === true;
+                                const isUnlocked = isGuest ? true : (isFirstLessonOfAll || (prevLessonId && completedLessons.includes(prevLessonId)));
                                 
                                 // Check if the current lesson is in the completed list
                                 const isCompleted = completedLessons.includes(lesson.id);
+
+                                // Only allow skipping for special admin flows; by default do NOT allow signed-in users to skip.
+                                const allowSkip = false;
 
                                 return (
                                     <LessonCard 
@@ -288,7 +293,8 @@ export const UnitPage = () => {
                                         lesson={lesson} 
                                         isUnlocked={isUnlocked} 
                                         isCompleted={isCompleted}
-                                        onSkip={handleSkip} 
+                                        onSkip={handleSkip}
+                                        allowSkip={allowSkip}
                                     />
                                 );
                             })}

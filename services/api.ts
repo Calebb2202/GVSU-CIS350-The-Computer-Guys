@@ -362,6 +362,14 @@ const completeLesson = async (userId: string, lessonId: string, xpToAward: numbe
             updates.belt = newBelt; // Add belt promotion to the same update
         }
 
+    // Also record xp by day on the user document so server has per-day XP history
+    // Firestore supports updating nested map fields via dot notation.
+    try {
+      updates[`xpByDay.${today}`] = increment(xpToAward);
+    } catch (err) {
+      console.warn('Could not prepare xpByDay update:', err);
+    }
+
         // 6. Perform the single database update
         await updateDoc(userRef, updates);
         
