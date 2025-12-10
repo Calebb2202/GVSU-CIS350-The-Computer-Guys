@@ -11,4 +11,30 @@ Description: Python programming langauge learning application which we named Syn
 
 # Prerequisites
 
+Before running the project, ensure you have the following installed on your machine:
+
+* Git: For version control. [Download Git](https://git-scm.com/install/)
+* Node.js & npm: Node.js includes npm (Node Package Manager), which is required to install dependencies and run the development server. [Download Node.js](https://nodejs.org/en)
+
 # Run Instuctions
+
+Follow these steps to set up and run the frontend locally:
+
+1. **Get the latest code**
+   ```bash
+   git pull
+   
+2. Switch to the frontend branch
+    ```bash
+    git switch frontend
+
+3. Install dependencies
+    ```bash
+    npm install
+
+4. Start the development server
+    ```bash
+    npm run dev
+
+5. View in Browser Copy the local URL provided in your terminal (usually http://localhost:3000) and paste it into your web brow
+
