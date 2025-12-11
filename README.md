@@ -18,7 +18,7 @@ Before running the project, ensure you have the following installed on your mach
 
 # Run Instuctions
 
-Follow these steps to set up and run the frontend locally:
+Follow these steps to set up and run the project locally after having cloned the repository:
 
 1. **Get the latest code**
    ```bash
