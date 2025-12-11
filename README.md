@@ -36,5 +36,5 @@ Follow these steps to set up and run the frontend locally:
     ```bash
     npm run dev
 
-5. View in Browser Copy the local URL provided in your terminal (usually http://localhost:3000) and paste it into your web brow
+5. View in Browser Copy the local URL provided in your terminal (usually http://localhost:3000) and paste it into your web browser.
 
