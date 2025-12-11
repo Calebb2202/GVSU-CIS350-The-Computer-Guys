@@ -24,12 +24,12 @@ This portion of the doccument describes our requirments for the project covering
 | FR7 | The system shall display the user's current "belt" rank on the dashboard. |
 | FR8 | The system shall display the user's total earned XP (Experience Points) on the dashboard. |
 | FR9 | The system shall organize lessons into "belt" units (e.g., "White Belt," "Orange Belt") and display them on the dashboard. |
-| FR10 | The dashboard shall serve as the primary navigation hub, allowing users to select and start lessons from the displayed units. |
+| FR10 | The dashboard shall serve as the primary navigation hub, allowing users to navigate to the lessons page then select and start lessons from the displayed units. |
 
 ### Lesson Module
 | ID | Requirement |
 | :-------------: | :---------- |
-| FR11 | The system shall present a "Concept" pop-up or modal at the beginning of each lesson explaining the topic. |
+| FR11 | The system shall present a "Concept" pop-up at the beginning of each lesson explaining the topic. |
 | FR12 | The system shall present lessons containing multiple-choice questions. |
 | FR13 | The system shall present lessons containing fill-in-the-blank questions. |
 | FR14 | The system shall provide immediate feedback (e.g., "Correct" or "Incorrect") to the user after they submit an answer. |
